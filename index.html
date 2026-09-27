@@ -56,11 +56,12 @@
             </div>
         </header>
 
-        <!-- Вкладки навигации -->
-        <nav class="tab-bar">
+        <!-- Вкладки навигации с поддержкой скролла на iOS -->
+        <nav class="tab-bar" style="overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
             <button class="tab-btn active" onclick="switchTab('transactions-screen')">💸 Операции</button>
             <button class="tab-btn" onclick="switchTab('goals-screen')">🎯 Цели</button>
             <button class="tab-btn" onclick="switchTab('debts-screen')">🤝 Долги</button>
+            <button class="tab-btn" onclick="switchTab('payments-screen')">💳 Платежи</button>
             <button class="tab-btn" onclick="switchTab('calendar-screen')">📅 Календарь</button>
         </nav>
 
@@ -78,7 +79,7 @@
                         <option value="💼 Доход">💼 Доход (Зарплата, фриланс и т.д.)</option>
                         <option value="🍔 Еда">🍔 Еда и продукты</option>
                         <option value="🏠 Жилье">🏠 Жилье и коммуналка</option>
-                        <option value="🚗 Траспорт">🚗 Транспорт и такси</option>
+                        <option value="🚗 Транспорт">🚗 Транспорт и такси</option>
                         <option value="🎉 Развлечения">🎉 Развлечения и отдых</option>
                         <option value="🛍️ Покупки">🛍️ Покупки и одежда</option>
                         <option value="🛠️ Другое" selected>🛠️ Другое</option>
@@ -96,7 +97,6 @@
                 </div>
             </section>
         </div>
-
         <!-- ЭКРАН 2: ЦЕЛИ -->
         <div id="goals-screen" class="tab-content">
             <section class="app-section">
@@ -119,7 +119,6 @@
                 <div class="form-group">
                     <input type="text" id="debt-name" placeholder="Имя человека">
                     <input type="number" id="debt-amount" placeholder="Сумма (₽)">
-                    <!-- НОВОЕ ПОЛЕ: Описание долга -->
                     <input type="text" id="debt-desc" placeholder="За что долг? (необязательно)">
                     <input type="date" id="debt-date">
                     <select id="debt-type">
@@ -133,7 +132,45 @@
             </section>
         </div>
 
-        <!-- ЭКРАН 4: КАЛЕНДАРЬ -->
+        <!-- ЭКРАН 4: РЕГУЛЯРНЫЕ ПЛАТЕЖИ -->
+        <div id="payments-screen" class="tab-content">
+            <section class="app-section">
+                <h2>💳 Новый регулярный платеж (Подписки, Рассрочки)</h2>
+                <div class="form-group">
+                    <input type="number" id="pay-amount" placeholder="Сумма платежа (₽)">
+                    <input type="text" id="pay-desc" placeholder="Назначение (например, Интернет)">
+                    <input type="number" id="pay-day" placeholder="Какого числа платить? (1-31)" min="1" max="31">
+                    
+                    <label for="pay-end-month" class="field-label">По какой месяц платить включительно:</label>
+                    <select id="pay-end-month">
+                        <option value="9">Октябрь</option>
+                        <option value="10">Ноябрь</option>
+                        <option value="11">Декабрь</option>
+                        <option value="0">Январь</option>
+                        <option value="1">Февраль</option>
+                        <option value="2">Март</option>
+                        <option value="3">Апрель</option>
+                        <option value="4">Май</option>
+                        <option value="5">Июнь</option>
+                        <option value="6">Июль</option>
+                        <option value="7">Август</option>
+                    </select>
+                    
+                    <label for="pay-end-year" class="field-label">Год окончания:</label>
+                    <select id="pay-end-year">
+                        <option value="2026" selected>2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                    </select>
+
+                    <button onclick="addRecurringPayment()">Создать регулярный платеж</button>
+                </div>
+                <h3>Мои активные регулярные подписки и платежи</h3>
+                <div id="payments-list" class="list-container"></div>
+            </section>
+        </div>
+
+        <!-- ЭКРАН 5: КАЛЕНДАРЬ -->
         <div id="calendar-screen" class="tab-content">
             <section class="app-section">
                 <h2 id="calendar-title">📅 Календарь запланированных трат</h2>
@@ -170,7 +207,6 @@
             <input type="text" id="edit-debt-name">
             <label class="modal-label">Сумма (₽):</label>
             <input type="number" id="edit-debt-amount">
-            <!-- НОВОЕ ПОЛЕ В МОДАЛКЕ: Изменить описание долга -->
             <label class="modal-label">За что долг:</label>
             <input type="text" id="edit-debt-desc">
             <label class="modal-label">Дата выплаты (календарь):</label>

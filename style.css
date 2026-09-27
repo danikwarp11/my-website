@@ -216,7 +216,7 @@ button { width: 100%; padding: 14px; background: var(--accent); color: #fff; bor
        .main-header div { width: 100%; }
        .header-right-side { text-align: left !important; align-items: flex-start !important; width: 100%; }
        
-       /* Перестраиваем 3 карточки на iPhone в удобную прокрутку или компактную сетку */
+       /* Перестраиваем 3 карточки на iPhone в компактную сетку */
        .balance-cards-group { width: 100%; gap: 8px; display: grid; grid-template-columns: repeat(3, 1fr); }
        .balance-card { padding: 8px 6px; text-align: center; }
        .balance-label { font-size: 8px; letter-spacing: -0.2px; }
