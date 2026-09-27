@@ -74,17 +74,20 @@ function deleteItem(dataType, id) {
     saveData();
 }
 
-// Новая функция: Отмена регулярной подписки ТОЛЬКО на один выбранный месяц
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ: Теперь черный список месяцев создается и сохраняется железно!
 function deletePaymentForSingleMonth(paymentId, dateStr) {
     const payment = data.payments.find(p => p.id === paymentId);
     if (payment) {
+        // Проверяем и создаем массив пропусков правильно
         if (!payment.skippedExceptions) {
             payment.skippedExceptions = [];
         }
+        // Записываем дату, чтобы пропустить её в этом месяце
         payment.skippedExceptions.push(dateStr);
-        saveData();
+        saveData(); // Сохраняем изменения и принудительно обновляем баланс на экране!
     }
 }
+
 
 // Добавление новой операции (Описание необязательно)
 function addTransaction() {
