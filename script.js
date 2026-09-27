@@ -82,10 +82,15 @@ function addTransaction() {
     const dateInput = document.getElementById('tx-date');
 
     const amount = parseFloat(amountInput.value);
-    const desc = descInput.value ? descInput.value.trim() : '';
     const category = categoryInput ? categoryInput.value : '🛠️ Другое';
     
-    // АВТО-ОПРЕДЕЛЕНИЕ: если категория Доход — ставим тип income, иначе expense
+    // ТЕПЕРЬ ТУТ: Если описание пустое, автоматически подставляем имя категории
+    let desc = descInput.value ? descInput.value.trim() : '';
+    if (!desc) {
+        desc = category; 
+    }
+    
+    // Авто-определение типа операции
     const type = (category === '💼 Доход') ? 'income' : 'expense';
     let date = dateInput ? dateInput.value : '';
 
@@ -93,8 +98,9 @@ function addTransaction() {
         date = new Date().toISOString().split('T')[0];
     }
 
-    if (!amount || amount <= 0 || !desc) {
-        alert('Пожалуйста, заполните сумму и описание операции!');
+    // Теперь блокируем отправку ТОЛЬКО если не введена сумма
+    if (!amount || amount <= 0) {
+        alert('Пожалуйста, укажите сумму операции!');
         return;
     }
 
