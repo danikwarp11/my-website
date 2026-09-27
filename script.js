@@ -460,10 +460,13 @@ function initCalendar() {
     const selectedMonth = parseInt(document.getElementById('view-month').value);
     const selectedYear = parseInt(document.getElementById('view-year').value);
 
-    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-    document.getElementById('calendar-title').innerText = `📅 Календарь запланированных трат: ${monthNames[selectedMonth]} ${selectedYear}`;
+    const monthNames = ["Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря"];
+    const monthNamesHeader = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    document.getElementById('calendar-title').innerText = `📅 Календарь запланированных трат: ${monthNamesHeader[selectedMonth]} ${selectedYear}`;
 
     const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    const weekdaysFull = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    
     let html = '<div class="calendar-grid">';
     weekdays.forEach(day => html += `<div class="calendar-weekday">${day}</div>`);
 
@@ -471,34 +474,85 @@ function initCalendar() {
     const shiftIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
     const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
+    // Получаем точную текущую дату устройства
+    const realToday = new Date();
+    const realDay = realToday.getDate();
+    const realMonth = realToday.getMonth();
+    const realYear = realToday.getFullYear();
+
     for (let i = 0; i < shiftIndex; i++) html += '<div class="calendar-day empty"></div>';
 
     for (let day = 1; day <= daysInMonth; day++) {
-        const currentM = String(selectedMonth + 1).padStart(2, '0'); const currentD = String(day).padStart(2, '0');
+        const currentM = String(selectedMonth + 1).padStart(2, '0'); 
+        const currentD = String(day).padStart(2, '0');
         const dateStr = `${selectedYear}-${currentM}-${currentD}`;
 
         const dayTx = data.transactions.filter(t => t.date === dateStr);
         const dayDebts = data.debts.filter(d => d.date === dateStr);
+        const dayPayments = data.payments.filter(p => p.day === day && isPaymentActiveInMonth(p, selectedMonth, selectedYear));
+
+        const hasEvents = dayTx.length > 0 || dayDebts.length > 0 || dayPayments.length > 0;
+        
+        // ПРОВЕРКА НА ТЕКУЩИЙ ДЕНЬ: совпадает ли ячейка с сегодняшним числом, месяцем и годом
+        const isToday = (day === realDay && selectedMonth === realMonth && selectedYear === realYear);
+        
+        // Формируем классы. Если это сегодня — принудительно отображаем день на iPhone, даже если там нет трат
+        let dayClasses = [];
+        if (!hasEvents && !isToday) dayClasses.push('no-events');
+        if (isToday) dayClasses.push('today-highlight');
+        
+        const finalClassesStr = dayClasses.join(' ');
+
+        const dayOfWeekIndex = new Date(selectedYear, selectedMonth, day).getDay();
+        const dayOfWeekText = weekdaysFull[dayOfWeekIndex];
 
         let eventsHtml = '<div class="calendar-events-container">';
-        dayTx.forEach(t => { eventsHtml += `<div class="cal-event-badge ${t.type}">${t.type === 'income' ? '+' : '-'}${t.amount} ${t.desc}</div>`; });
-        dayDebts.forEach(d => { eventsHtml += `<div class="cal-event-badge debt">🤝 ${d.amount} ${d.name} (${d.desc})</div>`; });
         
-        // ВЫВОД РЕГУЛЯРНЫХ ПОДПИСОК С КНОПКОЙ КОНКРЕТНОГО УДАЛЕНИЯ
-        data.payments.forEach(p => {
-            if (p.day === day && isPaymentActiveInMonth(p, selectedMonth, selectedYear)) {
-                eventsHtml += `
-                    <div class="cal-event-badge expense" style="background:#5856d6; border-color:#5856d6; display:flex; justify-content:between; align-items:center;">
-                        <span>💳 ${p.amount} ₽ | ${p.desc}</span>
-                        <button onclick="event.stopPropagation(); deletePaymentForSingleMonth(${p.id}, '${dateStr}')" style="width:auto; padding:0 3px; font-size:8px; line-height:1; background:rgba(0,0,0,0.3); border-radius:3px; margin-left:auto; display:inline-block; border:none; color:#fff;">✕ пропустить месяц</button>
-                    </div>`;
-            }
+        dayTx.forEach(t => { 
+            const sign = t.type === 'income' ? '💼 +' : '📉 -';
+            eventsHtml += `<div class="cal-event-badge ${t.type}">${sign} ${t.amount.toLocaleString()} ₽ | ${t.desc}</div>`; 
+        });
+        
+        dayDebts.forEach(d => { 
+            eventsHtml += `<div class="cal-event-badge debt">🤝 ${d.amount.toLocaleString()} ₽ | ${d.name} (${d.desc})</div>`; 
+        });
+        
+        dayPayments.forEach(p => {
+            eventsHtml += `
+                <div class="cal-event-badge recurring">
+                    <span>💳 ${p.amount.toLocaleString()} ₽ | ${p.desc}</span>
+                    <button onclick="event.stopPropagation(); deletePaymentForSingleMonth(${p.id}, '${dateStr}')" style="width:auto; padding:2px 6px; font-size:9px; background:rgba(255,255,255,0.15); border-radius:5px; margin-left:auto; display:inline-block; border:none; color:#fff; cursor:pointer;">✕ пропустить</button>
+                </div>`;
         });
         
         eventsHtml += '</div>';
-        html += `<div class="calendar-day"><div class="calendar-day-number">${day}</div>${eventsHtml}</div>`;
-    }
-    html += '</div>'; calendarEl.innerHTML = html;
-}
 
-render();
+        // К тексту даты на мобильном дописываем "Сегодня", если совпало
+        const todayLabel = isToday ? ' — СЕГОДНЯ' : '';
+
+        html += `
+            <div class="calendar-day ${finalClassesStr}">
+                <div class="calendar-day-number">
+                    <span class="pc-day">${day}</span>
+                    <span class="mobile-day" style="display:none;">${day} ${monthNames[selectedMonth]} (${dayOfWeekText})${todayLabel}</span>
+                </div>
+                ${eventsHtml}
+            </div>
+        `;
+    }
+    html += '</div>'; 
+    calendarEl.innerHTML = html;
+
+    const isMobile = window.innerWidth <= 600;
+    document.querySelectorAll('.calendar-day-number').forEach(el => {
+        const pcSpan = el.querySelector('.pc-day');
+        const mobSpan = el.querySelector('.mobile-day');
+        if (isMobile) {
+            if(pcSpan) pcSpan.style.display = 'none';
+            if(mobSpan) mobSpan.style.display = 'inline';
+        } else {
+            if(pcSpan) pcSpan.style.display = 'inline';
+            if(mobSpan) mobSpan.style.display = 'none';
+        }
+    });
+}

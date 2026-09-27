@@ -261,4 +261,34 @@ button { width: 100%; padding: 14px; background: var(--accent); color: #fff; bor
        display: flex; justify-content: space-between; padding: 10px 0;
        border-bottom: 1px solid #48484a; font-size: 14px; color: #f5f5f7;
    }
+/* ==========================================
+   11. ПОДСВЕТКА ТЕКУЩЕГО ДНЯ В КАЛЕНДАРЕ
+   ========================================== */
+/* На ПК версии обводим всю ячейку красивой красной неоновой рамкой */
+.calendar-day.today-highlight {
+    border: 2px solid var(--red) !important;
+    box-shadow: 0 0 10px rgba(255, 59, 48, 0.3);
+    background: rgba(255, 59, 48, 0.03) !important;
+}
+
+/* На iPhone версии делаем красивую нативную красную точку-индикатор рядом с датой */
+@media (max-width: 600px) {
+    .calendar-day.today-highlight .calendar-day-number {
+        color: var(--red) !important; /* Делаем текст даты красным */
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    /* Добавляем аккуратный красный пульсирующий кружок перед датой */
+    .calendar-day.today-highlight .calendar-day-number::before {
+        content: "";
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: var(--red);
+        border-radius: 50%;
+        box-shadow: 0 0 6px var(--red);
+    }
+}
    
