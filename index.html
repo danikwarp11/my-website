@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Мой Финансовый Трекер PRO</title>
-    <!-- Иконка для экрана Домой на iPhone -->
-    <!-- Меняем на эту строчку для вечной локальной иконки на iPhone -->
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -68,7 +66,7 @@
                 <h2>Новая операция (Текущая или Планируемая)</h2>
                 <div class="form-group">
                     <input type="number" id="tx-amount" placeholder="Сумма (₽)">
-                    <input type="text" id="tx-desc" placeholder="Описание">
+                    <input type="text" id="tx-desc" placeholder="Описание (необязательно)">
                     <input type="date" id="tx-date">
                     
                     <label for="tx-category" class="field-label">Тип операции (Категория):</label>
@@ -84,8 +82,15 @@
 
                     <button onclick="addTransaction()">Добавить операцию</button>
                 </div>
-                <h3>История транзакций за выбранный месяц</h3>
-                <div id="tx-list" class="list-container"></div>
+
+                <!-- РАЗДЕЛЕННЫЕ СПИСКИ ИСТОРИИ -->
+                <div class="split-lists-wrapper">
+                    <h3>💼 Поступления и Доходы</h3>
+                    <div id="tx-income-list" class="list-container" style="margin-bottom: 20px;"></div>
+
+                    <h3>📉 Расходы и Траты</h3>
+                    <div id="tx-expense-list" class="list-container"></div>
+                </div>
             </section>
         </div>
 
@@ -94,12 +99,12 @@
             <section class="app-section">
                 <h2>🎯 Новая цель на покупку</h2>
                 <div class="form-group">
-                    <input type="text" id="goal-name" placeholder="What to buy?">
-                    <input type="number" id="goal-target" placeholder="Стоимость (₽)">
-                    <input type="number" id="goal-current" placeholder="Накоплено (₽)" value="0">
+                    <input type="text" id="goal-name" placeholder="Что хочу купить?">
+                    <input type="number" id="goal-target" placeholder="Полная стоимость (₽)">
+                    <input type="number" id="goal-current" placeholder="Уже накоплено (₽)" value="0">
                     <button onclick="addGoal()">Создать цель</button>
                 </div>
-                <h3>Мои активные цели (постоянно)</h3>
+                <h3>Мои активные цели</h3>
                 <div id="goals-list" class="list-container"></div>
             </section>
         </div>
@@ -118,7 +123,7 @@
                     </select>
                     <button onclick="addDebt()">Записать долг</button>
                 </div>
-                <h3>Список всех долгов (постоянно)</h3>
+                <h3>Список всех долгов</h3>
                 <div id="debts-list" class="list-container"></div>
             </section>
         </div>
@@ -131,6 +136,42 @@
             </section>
         </div>
 
+    </div>
+
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: РЕДАКТИРОВАНИЕ ЦЕЛИ -->
+    <div id="modal-edit-goal" class="modal-backdrop">
+        <div class="modal-window">
+            <h3>✏️ Изменить цель</h3>
+            <input type="hidden" id="edit-goal-id">
+            <label class="modal-label">Название:</label>
+            <input type="text" id="edit-goal-name">
+            <label class="modal-label">Полная стоимость (₽):</label>
+            <input type="number" id="edit-goal-target">
+            <label class="modal-label">Уже накоплено (₽):</label>
+            <input type="number" id="edit-goal-current">
+            <div class="modal-buttons">
+                <button onclick="closeGoalModal()" class="cancel-btn">Отмена</button>
+                <button onclick="saveGoalModal()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: РЕДАКТИРОВАНИЕ ДОЛГА -->
+    <div id="modal-edit-debt" class="modal-backdrop">
+        <div class="modal-window">
+            <h3>✏️ Изменить долг</h3>
+            <input type="hidden" id="edit-debt-id">
+            <label class="modal-label">Имя человека:</label>
+            <input type="text" id="edit-debt-name">
+            <label class="modal-label">Сумма (₽):</label>
+            <input type="number" id="edit-debt-amount">
+            <label class="modal-label">Дата выплаты (календарь):</label>
+            <input type="date" id="edit-debt-date">
+            <div class="modal-buttons">
+                <button onclick="closeDebtModal()" class="cancel-btn">Отмена</button>
+                <button onclick="saveDebtModal()">Сохранить</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
