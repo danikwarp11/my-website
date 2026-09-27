@@ -40,17 +40,14 @@
             
             <div class="header-right-side">
                 <div class="balance-cards-group">
-                    <!-- Карточка 1: Общий доход (Интерактивная) -->
                     <div class="balance-card header-income-card clickable-card" onclick="showStatModal('income')">
                         <span class="balance-label">Общий доход</span>
                         <span id="total-income">0 ₽</span>
                     </div>
-                    <!-- Карточка 2: Чистый баланс (Интерактивная) -->
                     <div class="balance-card clickable-card" onclick="showStatModal('expense')">
                         <span class="balance-label">Чистый баланс</span>
                         <span id="total-balance">0 ₽</span>
                     </div>
-                    <!-- Карточка 3: Бессрочные долги (Интерактивная) -->
                     <div class="balance-card header-debt-card clickable-card" onclick="showStatModal('undated-debts')">
                         <span class="balance-label">Бессрочные долги</span>
                         <span id="total-undated-debts">0 ₽</span>
@@ -81,7 +78,7 @@
                         <option value="💼 Доход">💼 Доход (Зарплата, фриланс и т.д.)</option>
                         <option value="🍔 Еда">🍔 Еда и продукты</option>
                         <option value="🏠 Жилье">🏠 Жилье и коммуналка</option>
-                        <option value="🚗 Транспорт">🚗 Транспорт и такси</option>
+                        <option value="🚗 Траспорт">🚗 Транспорт и такси</option>
                         <option value="🎉 Развлечения">🎉 Развлечения и отдых</option>
                         <option value="🛍️ Покупки">🛍️ Покупки и одежда</option>
                         <option value="🛠️ Другое" selected>🛠️ Другое</option>
@@ -122,6 +119,8 @@
                 <div class="form-group">
                     <input type="text" id="debt-name" placeholder="Имя человека">
                     <input type="number" id="debt-amount" placeholder="Сумма (₽)">
+                    <!-- НОВОЕ ПОЛЕ: Описание долга -->
+                    <input type="text" id="debt-desc" placeholder="За что долг? (необязательно)">
                     <input type="date" id="debt-date">
                     <select id="debt-type">
                         <option value="i-owe">Я должен (-)</option>
@@ -171,6 +170,9 @@
             <input type="text" id="edit-debt-name">
             <label class="modal-label">Сумма (₽):</label>
             <input type="number" id="edit-debt-amount">
+            <!-- НОВОЕ ПОЛЕ В МОДАЛКЕ: Изменить описание долга -->
+            <label class="modal-label">За что долг:</label>
+            <input type="text" id="edit-debt-desc">
             <label class="modal-label">Дата выплаты (календарь):</label>
             <input type="date" id="edit-debt-date">
             <div class="modal-buttons">
@@ -184,9 +186,7 @@
     <div id="modal-statistics" class="modal-backdrop">
         <div class="modal-window" style="max-width: 450px;">
             <h3 id="stat-modal-title">📊 Детализация</h3>
-            <div id="stat-modal-content" class="list-container" style="max-height: 300px; margin-top: 15px;">
-                <!-- Сюда скрипт выведет детальные траты/доходы/долги -->
-            </div>
+            <div id="stat-modal-content" class="list-container" style="max-height: 300px; margin-top: 15px;"></div>
             <div class="modal-buttons">
                 <button onclick="closeStatModal()" style="background:#48484a;">Закрыть</button>
             </div>

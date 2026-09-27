@@ -3,7 +3,7 @@
 // ==========================================
 
 // Загружаем данные из локальной памяти устройства
-let data = JSON.parse(localStorage.getItem('myFinanceDataPRO_V5')) || {
+let data = JSON.parse(localStorage.getItem('myFinanceDataPRO_V6')) || {
     transactions: [],
     goals: [],
     debts: []
@@ -32,7 +32,7 @@ let calendar = null;
 
 // Функция вечного сохранения данных в localStorage
 function saveData() {
-    localStorage.setItem('myFinanceDataPRO_V5', JSON.stringify(data));
+    localStorage.setItem('myFinanceDataPRO_V6', JSON.stringify(data));
     render();
     if (document.getElementById('calendar-screen').classList.contains('active')) {
         initCalendar();
@@ -116,7 +116,7 @@ window.addEventListener('keydown', function(event) {
     }
 });
 // ==========================================
-// ЧАСТЬ 2: ЛОГИКА ЦЕЛЕЙ, ДОЛГОВ И МОДАЛЬНЫХ ОКОН
+// ЧАСТЬ 2: ЦЕЛИ, ДОЛГИ С ОПИСАНИЕМ И МОДАЛЬНЫЕ ОКНА
 // ==========================================
 
 function addGoal() {
@@ -182,22 +182,26 @@ function saveGoalModal() {
 function addDebt() {
     const nameInput = document.getElementById('debt-name');
     const amountInput = document.getElementById('debt-amount');
+    const descInput = document.getElementById('debt-desc'); 
     const typeInput = document.getElementById('debt-type');
     const dateInput = document.getElementById('debt-date');
 
     const name = nameInput.value ? nameInput.value.trim() : '';
     const amount = parseFloat(amountInput.value);
     const type = typeInput ? typeInput.value : 'i-owe';
-    let date = dateInput.value; // Оставляем пустой, если не выбрана
+    let date = dateInput.value; 
+
+    let desc = descInput.value ? descInput.value.trim() : 'Долг';
 
     if (!name || !amount || amount <= 0) {
         alert('Укажите имя и сумму долга!');
         return;
     }
 
-    data.debts.push({ id: Date.now(), name, amount, type, date });
+    data.debts.push({ id: Date.now(), name, amount, type, date, desc });
     nameInput.value = '';
     amountInput.value = '';
+    descInput.value = '';
     dateInput.value = ''; 
     saveData();
 }
@@ -209,6 +213,7 @@ function editDebt(id) {
     document.getElementById('edit-debt-id').value = debt.id;
     document.getElementById('edit-debt-name').value = debt.name;
     document.getElementById('edit-debt-amount').value = debt.amount;
+    document.getElementById('edit-debt-desc').value = debt.desc || 'Долг'; 
     document.getElementById('edit-debt-date').value = debt.date; 
     document.getElementById('modal-edit-debt').classList.add('open');
 }
@@ -223,57 +228,52 @@ function saveDebtModal() {
     if(debt) {
         debt.name = document.getElementById('edit-debt-name').value.trim() || debt.name;
         debt.amount = parseFloat(document.getElementById('edit-debt-amount').value) || debt.amount;
+        debt.desc = document.getElementById('edit-debt-desc').value.trim() || 'Долг'; 
         debt.date = document.getElementById('edit-debt-date').value; 
         saveData();
     }
     closeDebtModal();
 }
 // ==========================================
-// ЧАСТЬ 3: МАТЕМАТИКА БАЛАНСОВ И ВЫВОД СПИСКОВ
+// ЧАСТЬ 3: МАТЕМАТИКА И ВЫВОД РАЗДЕЛЕННЫХ СПИСКОВ
 // ==========================================
 
 function render() {
     const selectedMonth = parseInt(document.getElementById('view-month').value);
     const selectedYear = parseInt(document.getElementById('view-year').value);
 
-    let monthBalance = 0; 
-    let grossIncome = 0;
-    let totalUndatedDebtsAmount = 0; // Наш новый счетчик бессрочных долгов
+    let monthBalance = 0; let grossIncome = 0;
+    let totalUndatedDebtsAmount = 0; 
     
-    // ТРАНЗАКЦИИ: бессрочные (без даты) привязываются к текущему выбранному просмотру месяца
     const filteredTx = data.transactions.filter(t => {
         if (!t.date) return true; 
         const tDate = new Date(t.date);
         return tDate.getMonth() === selectedMonth && tDate.getFullYear() === selectedYear;
     });
 
-    // ДОЛГИ: разделяем на срочные этого месяца и бессрочные (глобальные)
     const currentMonthDebts = [];
 
     data.debts.forEach(d => {
         if (!d.date) {
-            totalUndatedDebtsAmount += d.amount; // Считаем сумму бессрочных долгов
+            totalUndatedDebtsAmount += d.amount; 
         } else {
             const dDate = new Date(d.date);
             if (dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear) {
-                currentMonthDebts.push(d); // Срочный долг текущего месяца
+                currentMonthDebts.push(d); 
             }
         }
     });
 
-    // Считаем баланс операций (доходы / расходы)
     filteredTx.forEach(t => {
         if (t.type === 'income') { monthBalance += t.amount; grossIncome += t.amount; } 
         else { monthBalance -= t.amount; }
     });
 
-    // Корректируем чистый баланс месяца только срочными долгами текущего периода
     currentMonthDebts.forEach(d => {
         if (d.type === 'i-owe') monthBalance -= d.amount;
         else if (d.type === 'me-owe') { monthBalance += d.amount; grossIncome += d.amount; }
     });
     
-    // Выводим данные в три наши карточки в шапке
     const incomeEl = document.getElementById('total-income');
     if (incomeEl) incomeEl.innerText = `${grossIncome.toLocaleString()} ₽`;
 
@@ -284,11 +284,8 @@ function render() {
     }
 
     const undatedDebtsEl = document.getElementById('total-undated-debts');
-    if (undatedDebtsEl) {
-        undatedDebtsEl.innerText = `${totalUndatedDebtsAmount.toLocaleString()} ₽`;
-    }
+    if (undatedDebtsEl) undatedDebtsEl.innerText = `${totalUndatedDebtsAmount.toLocaleString()} ₽`;
 
-    // Разделяем транзакции на экранах на два независимых списка
     const incomeTx = filteredTx.filter(t => t.type === 'income');
     const expenseTx = filteredTx.filter(t => t.type === 'expense');
 
@@ -316,7 +313,6 @@ function render() {
     if (expenseTx.length === 0) expenseListEl.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px; font-size:13px;">Нет расходов</div>';
     else expenseListEl.innerHTML = expenseTx.map(formatListItem).join('');
 
-    // Вывод целей
     const goalsList = document.getElementById('goals-list');
     if (data.goals.length === 0) {
         goalsList.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет целей</div>';
@@ -340,7 +336,6 @@ function render() {
         }).join('');
     }
 
-    // Вывод долгов
     const debtsList = document.getElementById('debts-list');
     if (data.debts.length === 0) {
         debtsList.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет долгов</div>';
@@ -352,9 +347,11 @@ function render() {
         
         debtsList.innerHTML = sortedDebts.map(d => {
             let dateText = d.date ? `(срок: ${d.date.split('-').reverse().join('.')})` : `<span style="color:var(--accent); font-weight:500;">(бессрочно)</span>`;
+            const reasonText = d.desc ? `<small style="color:var(--text-muted)"> [${d.desc}]</small>` : '';
+
             return `
                 <div class="list-item">
-                    <span><span style="color:${d.type === 'i-owe' ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${d.type === 'i-owe' ? 'Я должен' : 'Мне должны'}</span> — <strong>${d.name}</strong> <span style="font-size:11px; color:var(--text-muted)"> ${dateText}</span></span>
+                    <span><span style="color:${d.type === 'i-owe' ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${d.type === 'i-owe' ? 'Я должен' : 'Мне должны'}</span> — <strong>${d.name}</strong>${reasonText} <span style="font-size:11px; color:var(--text-muted)"> ${dateText}</span></span>
                     <span style="font-weight:600;">
                         ${d.amount.toLocaleString()} ₽
                         <button style="width:auto; display:inline-block; padding:2px 6px; font-size:11px; margin-left:5px; background:var(--tab-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;" onclick="editDebt(${d.id})">Изм.</button>
@@ -366,7 +363,7 @@ function render() {
     }
 }
 // ==========================================
-// ЧАСТЬ 4: ИНТЕРАКТИВНЫЕ МОДАЛЬНЫЕ ОКНА И КАЛЕНДАРЬ
+// ЧАСТЬ 4: ИНТЕРАКТИВНАЯ ДЕТАЛИЗАЦИЯ И КАЛЕНДАРЬ
 // ==========================================
 
 function showStatModal(type) {
@@ -386,7 +383,6 @@ function showStatModal(type) {
     if (type === 'income') {
         titleEl.innerText = "💼 Детализация доходов";
         const incomes = monthTx.filter(t => t.type === 'income');
-        
         const debtsToMe = data.debts.filter(d => {
             if(!d.date || d.type !== 'me-owe') return false;
             const dDate = new Date(d.date);
@@ -400,14 +396,13 @@ function showStatModal(type) {
                 html += `<div class="stat-modal-item"><span>${t.desc}</span><span style="color:var(--green); font-weight:600;">+${t.amount.toLocaleString()} ₽</span></div>`;
             });
             debtsToMe.forEach(d => {
-                html += `<div class="stat-modal-item"><span>🤝 Возврат долга: ${d.name}</span><span style="color:var(--green); font-weight:600;">+${d.amount.toLocaleString()} ₽</span></div>`;
+                html += `<div class="stat-modal-item"><span>🤝 Возврат долга [${d.desc}]: ${d.name}</span><span style="color:var(--green); font-weight:600;">+${d.amount.toLocaleString()} ₽</span></div>`;
             });
         }
     } 
     else if (type === 'expense') {
         titleEl.innerText = "📉 Детализация расходов";
         const expenses = monthTx.filter(t => t.type === 'expense');
-        
         const debtsFromMe = data.debts.filter(d => {
             if(!d.date || d.type !== 'i-owe') return false;
             const dDate = new Date(d.date);
@@ -421,7 +416,7 @@ function showStatModal(type) {
                 html += `<div class="stat-modal-item"><span><small style="color:var(--text-muted)">${t.category}</small> ${t.desc}</span><span style="color:var(--red); font-weight:600;">-${t.amount.toLocaleString()} ₽</span></div>`;
             });
             debtsFromMe.forEach(d => {
-                html += `<div class="stat-modal-item"><span>🤝 Выплата долга: ${d.name}</span><span style="color:var(--red); font-weight:600;">-${d.amount.toLocaleString()} ₽</span></div>`;
+                html += `<div class="stat-modal-item"><span>🤝 Выплата долга [${d.desc}]: ${d.name}</span><span style="color:var(--red); font-weight:600;">-${d.amount.toLocaleString()} ₽</span></div>`;
             });
         }
     } 
@@ -435,7 +430,7 @@ function showStatModal(type) {
             undatedList.forEach(d => {
                 const color = d.type === 'i-owe' ? 'var(--red)' : 'var(--green)';
                 const sign = d.type === 'i-owe' ? 'Я должен' : 'Мне должны';
-                html += `<div class="stat-modal-item"><span>${sign} — <strong>${d.name}</strong></span><span style="color:${color}; font-weight:600;">${d.amount.toLocaleString()} ₽</span></div>`;
+                html += `<div class="stat-modal-item"><span>${sign} — <strong>${d.name}</strong> <small style="color:var(--text-muted)">[${d.desc}]</small></span><span style="color:${color}; font-weight:600;">${d.amount.toLocaleString()} ₽</span></div>`;
             });
         }
     }
@@ -475,7 +470,7 @@ function initCalendar() {
 
         let eventsHtml = '<div class="calendar-events-container">';
         dayTx.forEach(t => { eventsHtml += `<div class="cal-event-badge ${t.type}">${t.type === 'income' ? '+' : '-'}${t.amount} ${t.desc}</div>`; });
-        dayDebts.forEach(d => { eventsHtml += `<div class="cal-event-badge debt">🤝 ${d.amount} (${d.name})</div>`; });
+        dayDebts.forEach(d => { eventsHtml += `<div class="cal-event-badge debt">🤝 ${d.amount} ${d.name} (${d.desc})</div>`; });
         eventsHtml += '</div>';
 
         html += `<div class="calendar-day"><div class="calendar-day-number">${day}</div>${eventsHtml}</div>`;
