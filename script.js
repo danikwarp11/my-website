@@ -373,17 +373,24 @@ function render() {
     // Вывод целей
     document.getElementById('goals-list').innerHTML = data.goals.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет целей</div>' : data.goals.map(g => {
         const pct = Math.min((g.current / g.target) * 100, 100).toFixed(0);
-        return `<div class="goal-container"><div class="goal-info"><span><strong>${g.name}</strong></span><span style="color:var(--text-muted); font-size:13px;">${g.current.toLocaleString()} / ${g.target.toLocaleString()} ₽ (${pct}%)</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;"><span style="cursor:pointer; color:var(--accent); font-size:12px; font-weight:600;" onclick="depositToGoal(${g.id})">Пополнить</span><span style="cursor:pointer; color:var(--accent); font-size:12px;" onclick="editGoal(${g.id})">Изм.</span><span style="cursor:pointer; color:var(--text-muted); font-size:12px;" onclick="deleteItem('goals', ${g.id})">Удалить</span></div></div>`;
+        return `<div class="goal-container"><div class="goal-info"><span><strong>${g.name}</strong></span><span style="color:var(--text-muted); font-size:13px;">${g.current.toLocaleString()} / ${g.target.toLocaleString()} ₽ (${pct}%)</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;">
+            <span style="cursor:pointer; color:var(--accent); font-size:12px; font-weight:600;" onclick="depositToGoal(${g.id})">Пополнить</span>
+            <span style="cursor:pointer; color:var(--accent); font-size:12px;" onclick="editGoal(${g.id})">Изм.</span>
+            <span style="cursor:pointer; color:var(--text-muted); font-size:12px;" onclick="deleteItem('goals', ${g.id})">Удалить</span>
+        </div></div>`;
     }).join('');
 
-    // Вывод долгов
+    // Вывод долгов на своей вкладке
     const sortedDebts = [...data.debts].sort((a, b) => { if (!a.date) return 1; if (!b.date) return -1; return new Date(a.date) - new Date(b.date); });
     document.getElementById('debts-list').innerHTML = data.debts.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет долгов</div>' : sortedDebts.map(d => {
         let dateText = d.date ? `(срок: ${d.date.split('-').reverse().join('.')})` : `<span style="color:var(--accent); font-weight:500;">(бессрочно)</span>`;
-        return `<div class="list-item"><span><span style="color:${d.type === 'i-owe' ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${d.type === 'i-owe' ? 'Я должен' : 'Мне должны'}</span> — <strong>${d.name}</strong><small style="color:var(--text-muted)"> [${d.desc}]</small> <span style="font-size:11px; color:var(--text-muted)"> ${dateText}</span></span><span style="font-weight:600;">${d.amount.toLocaleString()} ₽<button style="width:auto; display:inline-block; padding:2px 6px; font-size:11px; margin-left:5px; background:var(--tab-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;" onclick="editDebt(${d.id})">Изм.</button><button class="delete-btn" onclick="deleteItem('debts', ${d.id})">✕</button></span></div>`;
+        return `<div class="list-item"><span><span style="color:${d.type === 'i-owe' ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${d.type === 'i-owe' ? 'Я должен' : 'Мне должны'}</span> — <strong>${d.name}</strong><small style="color:var(--text-muted)"> [${d.desc}]</small> <span style="font-size:11px; color:var(--text-muted)"> ${dateText}</span></span><span style="font-weight:600;">${d.amount.toLocaleString()} ₽
+            <button style="width:auto; display:inline-block; padding:2px 6px; font-size:11px; margin-left:5px; background:var(--tab-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;" onclick="editDebt(${d.id})">Изм.</button>
+            <button class="delete-btn" onclick="deleteItem('debts', ${d.id})">✕</button>
+        </span></div>`;
     }).join('');
 
-    // Вывод списка регулярных шаблонов подписок в свою вкладку
+    // Вывод списка подписок на вкладке «Платежи»
     const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
     const pListEl = document.getElementById('payments-list');
     if (data.payments.length === 0) {
@@ -401,7 +408,7 @@ function render() {
     }
 }
 // ==========================================
-// ЧАСТЬ 5: ОКНА ДЕТАЛИЗАЦИИ И СЕТКА КАЛЕНДАРЯ
+// ЧАСТЬ 5: ДЕТАЛИЗАЦИЯ И ИНТЕРАКТИВНЫЙ КАЛЕНДАРЬ С УДАЛЕНИЕМ
 // ==========================================
 
 function showStatModal(type) {
@@ -450,9 +457,34 @@ function showStatModal(type) {
     contentEl.innerHTML = html || '<div style="color:var(--text-muted); text-align:center; padding:15px;">Нет записей.</div>';
     document.getElementById('modal-statistics').classList.add('open');
 }
+function closeStatModal() { document.getElementById('modal-statistics').classList.remove('open'); }
 
-function closeStatModal() { 
-    document.getElementById('modal-statistics').classList.remove('open'); 
+// ИНТЕРАКТИВНЫЙ КЛИК ПО ПЛАШКАМ НА КАЛЕНДАРЕ
+function handleCalendarCardClick(type, id, extraData = '') {
+    if (type === 'recurring') {
+        const payment = data.payments.find(p => p.id === id);
+        if (payment) {
+            if (confirm(`Пропустить регулярный платеж "${payment.desc}" (${payment.amount.toLocaleString()} ₽) в этом месяце?`)) {
+                deletePaymentForSingleMonth(id, extraData);
+            }
+        }
+    } 
+    else if (type === 'debt') {
+        const debt = data.debts.find(d => d.id === id);
+        if (debt) {
+            if (confirm(`Удалить долг от/для "${debt.name}" на сумму ${debt.amount.toLocaleString()} ₽ навсегда со всех вкладок?`)) {
+                deleteItem('debts', id);
+            }
+        }
+    }
+    else if (type === 'transaction') {
+        const tx = data.transactions.find(t => t.id === id);
+        if (tx) {
+            if (confirm(`Удалить операцию "${tx.desc}" (${tx.amount.toLocaleString()} ₽) навсегда?`)) {
+                deleteItem('transactions', id);
+            }
+        }
+    }
 }
 
 function initCalendar() {
@@ -471,15 +503,12 @@ function initCalendar() {
     const shiftIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
     const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
 
-    // Получаем текущую дату для подсветки сегодняшнего дня
     const realToday = new Date();
     const realDay = realToday.getDate();
     const realMonth = realToday.getMonth();
     const realYear = realToday.getFullYear();
 
-    for (let i = 0; i < shiftIndex; i++) {
-        html += '<div class="calendar-day empty"></div>';
-    }
+    for (let i = 0; i < shiftIndex; i++) html += '<div class="calendar-day empty"></div>';
 
     for (let day = 1; day <= daysInMonth; day++) {
         const currentM = String(selectedMonth + 1).padStart(2, '0'); 
@@ -490,32 +519,29 @@ function initCalendar() {
         const dayDebts = data.debts.filter(d => d.date === dateStr);
         const dayPayments = data.payments.filter(p => p.day === day && isPaymentActiveInMonth(p, selectedMonth, selectedYear));
 
-        // Проверяем, является ли эта ячейка сегодняшним днем
         const isToday = (day === realDay && selectedMonth === realMonth && selectedYear === realYear);
         const todayClass = isToday ? 'today-highlight' : '';
 
         let eventsHtml = '<div class="calendar-events-container">';
         
+        // Обычные операции становятся кликабельными
         dayTx.forEach(t => { 
             const sign = t.type === 'income' ? '+' : '-';
-            eventsHtml += `<div class="cal-event-badge ${t.type}">${sign}${t.amount} ${t.desc}</div>`; 
+            eventsHtml += `<div class="cal-event-badge ${t.type}" style="cursor:pointer;" onclick="handleCalendarCardClick('transaction', ${t.id})">${sign}${t.amount} ${t.desc}</div>`; 
         });
         
+        // Долги становятся кликабельными (Стираются отовсюду при тапе)
         dayDebts.forEach(d => { 
-            eventsHtml += `<div class="cal-event-badge debt">🤝${d.amount} ${d.name}</div>`; 
+            eventsHtml += `<div class="cal-event-badge debt" style="cursor:pointer;" onclick="handleCalendarCardClick('debt', ${d.id})">🤝${d.amount} ${d.name}</div>`; 
         });
         
+        // Подписки становятся кликабельными (Убран микро-крестик, теперь весь блок — кнопка)
         dayPayments.forEach(p => {
-            eventsHtml += `
-                <div class="cal-event-badge recurring">
-                    <span>💳${p.amount} ${p.desc}</span>
-                    <button onclick="event.stopPropagation(); deletePaymentForSingleMonth(${p.id}, '${dateStr}')">✕</button>
-                </div>`;
+            eventsHtml += `<div class="cal-event-badge recurring" style="cursor:pointer;" onclick="handleCalendarCardClick('recurring', ${p.id}, '${dateStr}')">💳${p.amount} ${p.desc}</div>`;
         });
         
         eventsHtml += '</div>';
 
-        // Выводим только строгую чистую цифру дня, никаких длинных надписей наружу!
         html += `
             <div class="calendar-day ${todayClass}">
                 <div class="calendar-day-number">${day}</div>
@@ -526,3 +552,5 @@ function initCalendar() {
     html += '</div>'; 
     calendarEl.innerHTML = html;
 }
+
+render();
