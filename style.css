@@ -2,15 +2,22 @@
    1. ГЛОБАЛЬНЫЕ ТЕМНЫЕ ПЕРЕМЕННЫЕ (TRUE DARK)
    ========================================== */
    :root {
-    --bg-color: #1c1c1e;        /* Глубокий серый фон iOS/macOS */
-    --card-bg: #2c2c2e;         /* Контрастный фон для карточек */
-    --text-main: #f5f5f7;       /* Бело-серый основной текст */
+    --bg-color: #1c1c1e;        /* Фон iOS/macOS */
+    --card-bg: #2c2c2e;         /* Фон для карточек */
+    --text-main: #f5f5f7;       /* Основной текст */
     --text-muted: #aeaea2;      /* Приглушенный серый текст */
-    --accent: #0a84ff;          /* Яркий неоново-синий акцент */
+    --accent: #0a84ff;          /* Синий акцент */
     --green: #34c759;           /* Зеленый доход */
     --red: #ff3b30;             /* Красный расход */
-    --border-color: #48484a;    /* Темные рамки инпутов */
-    --tab-bg: #3a3a3c;          /* Темный фон под вкладками */
+    --border-color: #48484a;    /* Темные рамки */
+    --tab-bg: #3a3a3c;          /* Фон под вкладками */
+}
+
+/* Фикс прокрутки лево-право для всего сайта на iPhone */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
 }
 
 body {
@@ -128,7 +135,7 @@ body {
 
 .tab-btn.active {
     background: var(--card-bg);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     font-weight: 600;
 }
 
@@ -183,6 +190,15 @@ body {
     outline: none;
 }
 
+/* Фикс поля выбора даты на iOS */
+input[type="date"] {
+    max-width: 100% !important;
+    width: 100% !important;
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 47px;
+}
+
 .form-group input:focus, .form-group select:focus {
     border-color: var(--accent);
 }
@@ -203,11 +219,10 @@ button {
 button:hover {
     opacity: 0.9;
 }
-
 /* ==========================================
    5. СПИСКИ ЭЛЕМЕНТОВ
    ========================================== */
-.list-container {
+   .list-container {
     max-height: 350px;
     overflow-y: auto;
 }
@@ -405,18 +420,69 @@ button:hover {
         border-radius: 2px;
     }
 }
-/* Фикс прокрутки лево-право для всего сайта на iPhone */
-html, body {
-    max-width: 100%;
-    overflow-x: hidden;
-    position: relative;
+
+/* ==========================================
+   9. ИДЕАЛЬНЫЕ ТЁМНЫЕ МОДАЛЬНЫЕ ОКНА ДЛЯ IPHONE
+   ========================================== */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    box-sizing: border-box;
 }
 
-/* Фикс поля выбора даты на iOS (чтобы не растягивало экран) */
-input[type="date"] {
-    max-width: 100% !important;
-    width: 100% !important;
-    appearance: none;
-    -webkit-appearance: none;
-    min-height: 47px; /* Удобный размер под палец iOS */
+.modal-backdrop.open {
+    display: flex;
+}
+
+.modal-window {
+    background: #2c2c2e;
+    border: 1px solid #48484a;
+    padding: 24px;
+    border-radius: 18px;
+    width: 88%;
+    max-width: 320px;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7);
+    box-sizing: border-box;
+    animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-window h3 {
+    margin-top: 0; font-size: 19px; font-weight: 600; margin-bottom: 15px; color: #ffffff; text-align: center;
+}
+
+.modal-label {
+    display: block; font-size: 11px; color: #aeaea2; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 12px; margin-bottom: 5px; text-align: left;
+}
+
+.modal-window input {
+    width: 100%; padding: 12px 14px; border: 1px solid #48484a; border-radius: 10px; background: #1c1c1e; color: #ffffff !important; box-sizing: border-box; font-size: 16px; outline: none; transition: border-color 0.2s;
+}
+
+.modal-window input:focus {
+    border-color: #0a84ff;
+}
+
+.modal-buttons {
+    display: flex; gap: 12px; margin-top: 24px;
+}
+
+.modal-buttons button {
+    flex: 1; padding: 12px; font-size: 15px; font-weight: 600; border-radius: 10px;
+}
+
+.cancel-btn {
+    background: #48484a !important;
+    color: #ffffff !important;
 }
