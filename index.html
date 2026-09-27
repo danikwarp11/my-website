@@ -230,5 +230,34 @@
     </div>
 
     <script src="script.js"></script>
+        <!-- ВСПЛЫВАЮЩЕЕ ОКНО: УПРАВЛЕНИЕ ДОЛГОМ ИЗ КАЛЕНДАРЯ -->
+        <div id="modal-calendar-debt" class="modal-backdrop">
+            <div class="modal-window">
+                <h3>🤝 Действие с долгом</h3>
+                <p style="text-align:center; font-size:14px; color:var(--text-muted);" id="cal-debt-text"></p>
+                <input type="hidden" id="cal-debt-id">
+                <div class="modal-buttons" style="flex-direction: column; gap: 8px;">
+                    <button onclick="resolveDebtFromCalendar(true)" style="background:var(--green);">Долг погашен (баланс не изменится)</button>
+                    <button onclick="resolveDebtFromCalendar(false)" style="background:var(--red);">Удалить долг (баланс пересчитается)</button>
+                    <button onclick="closeCalDebtModal()" class="cancel-btn">Отмена</button>
+                </div>
+            </div>
+        </div>
+    
+        <!-- ВСПЛЫВАЮЩЕЕ ОКНО: УПРАВЛЕНИЕ ПЛАТЕЖОМ ИЗ КАЛЕНДАРЯ -->
+        <div id="modal-calendar-pay" class="modal-backdrop">
+            <div class="modal-window">
+                <h3>💳 Действие с платежом</h3>
+                <p style="text-align:center; font-size:14px; color:var(--text-muted);" id="cal-pay-text"></p>
+                <input type="hidden" id="cal-pay-id">
+                <input type="hidden" id="cal-pay-date">
+                <div class="modal-buttons" style="flex-direction: column; gap: 8px;">
+                    <button onclick="resolvePayFromCalendar(true)" style="background:var(--accent);">Платеж оплачен (деньги спишутся)</button>
+                    <button onclick="resolvePayFromCalendar(false)" style="background:#ff9500;">Пропустить в этом месяце (деньги вернутся)</button>
+                    <button onclick="closeCalPayModal()" class="cancel-btn">Отмена</button>
+                </div>
+            </div>
+        </div>
+    
 </body>
 </html>

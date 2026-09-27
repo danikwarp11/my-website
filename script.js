@@ -2,18 +2,16 @@
 // ЧАСТЬ 1: ИНИЦИАЛИЗАЦИЯ И РЕГУЛЯРНЫЕ ПЛАТЕЖИ
 // ==========================================
 
-// Загружаем данные (Переходим на стабильную версию хранилища V8)
-let data = JSON.parse(localStorage.getItem('myFinanceDataPRO_V8')) || {
+// Переходим на стабильную версию базы V9 с раздельным учетом погашений и пропусков
+let data = JSON.parse(localStorage.getItem('myFinanceDataPRO_V9')) || {
     transactions: [],
     goals: [],
     debts: [],
     payments: [] 
 };
 
-// Всегда принудительно включаем темную тему
 document.documentElement.setAttribute('data-theme', 'dark');
 
-// Настройка запоминания выбранного месяца
 const savedMonth = localStorage.getItem('selectedFinanceMonth');
 const viewMonthSelect = document.getElementById('view-month');
 const viewYearSelect = document.getElementById('view-year');
@@ -21,26 +19,23 @@ const viewYearSelect = document.getElementById('view-year');
 if (savedMonth !== null) {
     viewMonthSelect.value = savedMonth;
 } else {
-    viewMonthSelect.value = "9"; // По умолчанию Октябрь 2026 года
+    viewMonthSelect.value = "9"; // По умолчанию Октябрь
 }
 viewYearSelect.value = "2026";   
 
-// Оставляем поля дат изначально пустыми
 document.getElementById('tx-date').value = "";
 document.getElementById('debt-date').value = "";
 
 let calendar = null;
 
-// Функция вечного сохранения данных в localStorage
 function saveData() {
-    localStorage.setItem('myFinanceDataPRO_V8', JSON.stringify(data));
+    localStorage.setItem('myFinanceDataPRO_V9', JSON.stringify(data));
     render();
     if (document.getElementById('calendar-screen').classList.contains('active')) {
         initCalendar();
     }
 }
 
-// Запоминаем выбор месяца
 function changeViewMonth() {
     localStorage.setItem('selectedFinanceMonth', viewMonthSelect.value);
     render();
@@ -49,7 +44,6 @@ function changeViewMonth() {
     }
 }
 
-// Переключение экранов (Вкладки)
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -74,22 +68,6 @@ function deleteItem(dataType, id) {
     saveData();
 }
 
-// ИСПРАВЛЕННАЯ ФУНКЦИЯ: Теперь черный список месяцев создается и сохраняется железно!
-function deletePaymentForSingleMonth(paymentId, dateStr) {
-    const payment = data.payments.find(p => p.id === paymentId);
-    if (payment) {
-        // Проверяем и создаем массив пропусков правильно
-        if (!payment.skippedExceptions) {
-            payment.skippedExceptions = [];
-        }
-        // Записываем дату, чтобы пропустить её в этом месяце
-        payment.skippedExceptions.push(dateStr);
-        saveData(); // Сохраняем изменения и принудительно обновляем баланс на экране!
-    }
-}
-
-
-// Добавление новой операции (Описание необязательно)
 function addTransaction() {
     const amountInput = document.getElementById('tx-amount');
     const descInput = document.getElementById('tx-desc');
@@ -103,7 +81,7 @@ function addTransaction() {
     if (!desc) { desc = category; } 
     
     const type = (category === '💼 Доход') ? 'income' : 'expense';
-    let date = dateInput.value ? dateInput.value : ''; // Оставляем пустой, если не выбрана
+    let date = dateInput.value ? dateInput.value : ''; 
 
     if (!amount || amount <= 0) {
         alert('Пожалуйста, укажите сумму операции!');
@@ -117,7 +95,6 @@ function addTransaction() {
     saveData();
 }
 
-// Добавление регулярного шаблона подписок
 function addRecurringPayment() {
     const amountInput = document.getElementById('pay-amount');
     const descInput = document.getElementById('pay-desc');
@@ -143,7 +120,8 @@ function addRecurringPayment() {
         day: day,
         endMonth: endMonth,
         endYear: endYear,
-        skippedExceptions: [] // Тут сохраняем даты отмененных месяцев
+        skippedExceptions: [], // Список пропущенных месяцев (деньги возвращаются)
+        paidExceptions: []     // Список оплаченных месяцев (деньги списываются)
     });
 
     amountInput.value = '';
@@ -152,10 +130,9 @@ function addRecurringPayment() {
     saveData();
 }
 
-// Обработка клавиши Enter на клавиатуре
 window.addEventListener('keydown', function(event) {
     if (event.key === 'Enter') {
-        if(document.querySelector('.modal-backdrop.open')) return; 
+        if(document.querySelector('.modal-backdrop.open')) return;
 
         const txScreen = document.getElementById('transactions-screen');
         const goalsScreen = document.getElementById('goals-screen');
@@ -164,12 +141,12 @@ window.addEventListener('keydown', function(event) {
 
         if (txScreen && txScreen.classList.contains('active')) addTransaction();
         else if (goalsScreen && goalsScreen.classList.contains('active')) addGoal();
-        else if (debtsScreen && debtsScreen.mathbf.contains('active')) addDebt();
+        else if (debtsScreen && debtsScreen.classList.contains('active')) addDebt();
         else if (paymentsScreen && paymentsScreen.classList.contains('active')) addRecurringPayment();
     }
 });
 // ==========================================
-// ЧАСТЬ 2: ЦЕЛИ, ДОЛГИ И ОКНА РЕДАКТИРОВАНИЯ
+// ЧАСТЬ 2-1: ЛОГИКА ЦЕЛЕЙ И ИХ РЕДАКТИРОВАНИЕ
 // ==========================================
 
 function addGoal() {
@@ -187,9 +164,7 @@ function addGoal() {
     }
 
     data.goals.push({ id: Date.now(), name, target, current });
-    nameInput.value = '';
-    targetInput.value = '';
-    currentInput.value = '0';
+    nameInput.value = ''; targetInput.value = ''; currentInput.value = '0';
     saveData();
 }
 
@@ -226,6 +201,9 @@ function saveGoalModal() {
     }
     closeGoalModal();
 }
+// ==========================================
+// ЧАСТЬ 2-2: ЛОГИКА УЧЕТА ДОЛГОВ И ПРОВЕРКА ПОДПИСОК
+// ==========================================
 
 function addDebt() {
     const nameInput = document.getElementById('debt-name');
@@ -248,13 +226,6 @@ function addDebt() {
     data.debts.push({ id: Date.now(), name, amount, type, date, desc });
     nameInput.value = ''; amountInput.value = ''; descInput.value = ''; dateInput.value = ''; 
     saveData();
-}
-
-// Привязка клавиши Enter для экрана долгов
-if (document.getElementById('debts-screen')) {
-    document.getElementById('debts-screen').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') addDebt();
-    });
 }
 
 function editDebt(id) {
@@ -280,37 +251,108 @@ function saveDebtModal() {
     }
     closeDebtModal();
 }
-// ==========================================
-// ЧАСТЬ 3: МАТЕМАТИКА БАЛАНСА И СТРУКТУРА СПИСКОВ
-// ==========================================
 
-// Функция проверки: действует ли регулярная подписка в выбранный месяц и год
+// Новая безотказная функция проверки активности подписок
 function isPaymentActiveInMonth(p, targetMonth, targetYear) {
     if (targetYear > p.endYear) return false;
     if (targetYear < 2026) return false;
     
-    // Проверяем, не была ли подписка отменена на этот конкретный месяц
-    if (p.skippedExceptions && p.skippedExceptions.includes(`${targetYear}-${String(targetMonth + 1).padStart(2, '0')}`)) {
-        return false; // Если дата в черном списке — подписка в этом месяце не действует
-    }
+    const dateKey = `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}`;
+    
+    // Если платеж пропущен в этом месяце — скрываем его (деньги возвращаются)
+    if (p.skippedExceptions && p.skippedExceptions.includes(dateKey)) return false;
+    
+    // Если платеж помечен как Оплачен — скрываем его (но деньги остаются списанными)
+    if (p.paidExceptions && p.paidExceptions.includes(dateKey)) return false;
     
     if (targetYear === p.endYear) {
-        // Сравниваем индексы месяцев с учетом сдвига с Октября (индекс 9)
         const normalize = (m) => m >= 9 ? m - 9 : m + 3;
         return normalize(targetMonth) <= normalize(p.endMonth);
     }
     return true;
 }
+// ==========================================
+// ЧАСТЬ 2-3: КОНТЕКСТНОЕ УПРАВЛЕНИЕ ИЗ КАЛЕНДАРЯ
+// ==========================================
+
+// Функции управления новыми модальными окнами календаря
+function handleCalendarCardClick(type, id, extraData = '') {
+    if (type === 'debt') {
+        const debt = data.debts.find(d => d.id === id);
+        if (debt) {
+            document.getElementById('cal-debt-id').value = id;
+            document.getElementById('cal-debt-text').innerText = `Долг: ${debt.name} (${debt.amount.toLocaleString()} ₽). Какое действие выполнить?`;
+            document.getElementById('modal-calendar-debt').classList.add('open');
+        }
+    } 
+    else if (type === 'recurring') {
+        const payment = data.payments.find(p => p.id === id);
+        if (payment) {
+            document.getElementById('cal-pay-id').value = id;
+            document.getElementById('cal-pay-date').value = extraData;
+            document.getElementById('cal-pay-text').innerText = `Платеж: "${payment.desc}" (${payment.amount.toLocaleString()} ₽). Какое действие выполнить?`;
+            document.getElementById('modal-calendar-pay').classList.add('open');
+        }
+    }
+    else if (type === 'transaction') {
+        if (confirm('Удалить эту операцию навсегда?')) { deleteItem('transactions', id); }
+    }
+}
+
+function closeCalDebtModal() { document.getElementById('modal-calendar-debt').classList.remove('open'); }
+function closeCalPayModal() { document.getElementById('modal-calendar-pay').classList.remove('open'); }
+
+// Логика кнопок умного удаления ДОЛГА из календаря
+function resolveDebtFromCalendar(isSettled) {
+    const id = parseInt(document.getElementById('cal-debt-id').value);
+    const debt = data.debts.find(d => d.id === id);
+    
+    if (debt) {
+        if (isSettled) {
+            // Долг погашен — переносим его в "невидимый архив" (он стирается отовсюду, но баланс НЕ меняется)
+            debt.date = "settled-archived";
+            saveData();
+        } else {
+            // Удалить долг — стираем насовсем (баланс пересчитывается)
+            deleteItem('debts', id);
+        }
+    }
+    closeCalDebtModal();
+}
+
+// Логика кнопок умного удаления ПЛАТЕЖА из календаря
+function resolvePayFromCalendar(isPaid) {
+    const id = parseInt(document.getElementById('cal-pay-id').value);
+    const dateStr = document.getElementById('cal-pay-date').value;
+    const payment = data.payments.find(p => p.id === id);
+    
+    if (payment) {
+        const parts = dateStr.split('-');
+        const dateKey = `${parts[0]}-${parts[1]}`; // Строгий формат "YYYY-MM"
+        
+        if (isPaid) {
+            if (!payment.paidExceptions) payment.paidExceptions = [];
+            payment.paidExceptions.push(dateKey); // Записываем в оплаченные (деньги остаются списанными)
+        } else {
+            if (!payment.skippedExceptions) payment.skippedExceptions = [];
+            payment.skippedExceptions.push(dateKey); // Записываем в пропущенные (деньги возвращаются)
+        }
+        saveData();
+    }
+    closeCalPayModal();
+}
+// ==========================================
+// ЧАСТЬ 2-4: МАТЕМАТИЧЕСКИЙ РАСЧЕТ БАЛАНСОВ МЕСЯЦА
+// ==========================================
 
 function render() {
     const selectedMonth = parseInt(document.getElementById('view-month').value);
     const selectedYear = parseInt(document.getElementById('view-year').value);
 
-    let monthBalance = 0; 
-    let grossIncome = 0;
+    let monthBalance = 0; let grossIncome = 0;
     let totalUndatedDebtsAmount = 0; 
     
-    // ТРАНЗАКЦИИ: бессрочные (без даты) автоматически показываются в текущем выбранном месяце
+    // ТРАНЗАКЦИИ: бессрочные автоматически показываются в текущем выбранном месяце
     const filteredTx = data.transactions.filter(t => {
         if (!t.date) return true; 
         const tDate = new Date(t.date);
@@ -319,6 +361,7 @@ function render() {
 
     const currentMonthDebts = [];
     data.debts.forEach(d => {
+        if (d.date === "settled-archived") return; 
         if (!d.date) totalUndatedDebtsAmount += d.amount; 
         else {
             const dDate = new Date(d.date);
@@ -326,30 +369,31 @@ function render() {
         }
     });
 
-    // АВТОРАСЧЕТ: суммируем регулярные платежи, активные в этом месяце (как долги)
     let activeRecurringAmount = 0;
+    const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
+    
+    // Считаем регулярные платежи месяца (активные или принудительно оплаченные)
     data.payments.forEach(p => {
-        if (isPaymentActiveInMonth(p, selectedMonth, selectedYear)) {
-            activeRecurringAmount += p.amount;
+        if (p.paidExceptions && p.paidExceptions.includes(dateKey)) {
+            activeRecurringAmount += p.amount; 
+        } else if (isPaymentActiveInMonth(p, selectedMonth, selectedYear)) {
+            activeRecurringAmount += p.amount; 
         }
     });
 
-    // Математика доходов и расходов за месяц
     filteredTx.forEach(t => {
         if (t.type === 'income') { monthBalance += t.amount; grossIncome += t.amount; } 
         else { monthBalance -= t.amount; }
     });
 
-    // Корректируем чистый баланс срочными долгами текущего периода
     currentMonthDebts.forEach(d => {
         if (d.type === 'i-owe') monthBalance -= d.amount;
         else if (d.type === 'me-owe') { monthBalance += d.amount; grossIncome += d.amount; }
     });
     
-    // Вычитаем регулярные платежи из чистого баланса
     monthBalance -= activeRecurringAmount;
 
-    // Выводим результаты в три плашки шапки
+    // Обновляем плашки бюджетов вверху экрана
     if (document.getElementById('total-income')) document.getElementById('total-income').innerText = `${grossIncome.toLocaleString()} ₽`;
     const balanceEl = document.getElementById('total-balance');
     if (balanceEl) {
@@ -357,61 +401,40 @@ function render() {
         balanceEl.style.color = monthBalance >= 0 ? 'var(--green)' : 'var(--red)';
     }
     if (document.getElementById('total-undated-debts')) document.getElementById('total-undated-debts').innerText = `${totalUndatedDebtsAmount.toLocaleString()} ₽`;
-
-    // Разделяем транзакции на два независимых списка истории
-    const incomeTx = filteredTx.filter(t => t.type === 'income');
-    const expenseTx = filteredTx.filter(t => t.type === 'expense');
-
-    const formatListItem = (t) => {
-        const dateText = t.date ? `(${t.date.split('-').reverse().slice(0,2).join('.')})` : '<span style="color:var(--accent)">(бессрочно)</span>';
-        return `<div class="list-item"><div><span class="category-tag">${t.category}</span><strong>${t.desc}</strong> <span style="font-size:11px; color:var(--text-muted)">${dateText}</span></div><span style="color:${t.type === 'income' ? 'var(--green)' : 'var(--red)'}; font-weight:600;">${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()} ₽<button class="delete-btn" onclick="deleteItem('transactions', ${t.id})">✕</button></span></div>`;
-    };
-
-    document.getElementById('tx-income-list').innerHTML = incomeTx.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px; font-size:13px;">Нет поступлений</div>' : incomeTx.map(formatListItem).join('');
-    document.getElementById('tx-expense-list').innerHTML = expenseTx.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px; font-size:13px;">Нет расходов</div>' : expenseTx.map(formatListItem).join('');
 // ==========================================
-// ЧАСТЬ 4: РЕНДЕРИНГ ЦЕЛЕЙ, ДОЛГОВ И СПИСКА ПОДПИСОК
+// ЧАСТЬ 2-5: РЕНДЕРИНГ СПИСКОВ ОПЕРАЦИЙ, ЦЕЛЕЙ И ДОЛГОВ
 // ==========================================
 
-    // Вывод целей
-    document.getElementById('goals-list').innerHTML = data.goals.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет целей</div>' : data.goals.map(g => {
-        const pct = Math.min((g.current / g.target) * 100, 100).toFixed(0);
-        return `<div class="goal-container"><div class="goal-info"><span><strong>${g.name}</strong></span><span style="color:var(--text-muted); font-size:13px;">${g.current.toLocaleString()} / ${g.target.toLocaleString()} ₽ (${pct}%)</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;">
-            <span style="cursor:pointer; color:var(--accent); font-size:12px; font-weight:600;" onclick="depositToGoal(${g.id})">Пополнить</span>
-            <span style="cursor:pointer; color:var(--accent); font-size:12px;" onclick="editGoal(${g.id})">Изм.</span>
-            <span style="cursor:pointer; color:var(--text-muted); font-size:12px;" onclick="deleteItem('goals', ${g.id})">Удалить</span>
-        </div></div>`;
-    }).join('');
+const incomeTx = filteredTx.filter(t => t.type === 'income');
+const expenseTx = filteredTx.filter(t => t.type === 'expense');
 
-    // Вывод долгов на своей вкладке
-    const sortedDebts = [...data.debts].sort((a, b) => { if (!a.date) return 1; if (!b.date) return -1; return new Date(a.date) - new Date(b.date); });
-    document.getElementById('debts-list').innerHTML = data.debts.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет долгов</div>' : sortedDebts.map(d => {
-        let dateText = d.date ? `(срок: ${d.date.split('-').reverse().join('.')})` : `<span style="color:var(--accent); font-weight:500;">(бессрочно)</span>`;
-        return `<div class="list-item"><span><span style="color:${d.type === 'i-owe' ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${d.type === 'i-owe' ? 'Я должен' : 'Мне должны'}</span> — <strong>${d.name}</strong><small style="color:var(--text-muted)"> [${d.desc}]</small> <span style="font-size:11px; color:var(--text-muted)"> ${dateText}</span></span><span style="font-weight:600;">${d.amount.toLocaleString()} ₽
-            <button style="width:auto; display:inline-block; padding:2px 6px; font-size:11px; margin-left:5px; background:var(--tab-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;" onclick="editDebt(${d.id})">Изм.</button>
-            <button class="delete-btn" onclick="deleteItem('debts', ${d.id})">✕</button>
-        </span></div>`;
-    }).join('');
+const formatListItem = (t) => {
+    const dateText = t.date ? `(${t.date.split('-').reverse().slice(0,2).join('.')})` : '<span style="color:var(--accent)">(бессрочно)</span>';
+    return `<div class="list-item"><div><span class="category-tag">${t.category}</span><strong>${t.desc}</strong> <span style="font-size:11px; color:var(--text-muted)">${dateText}</span></div><span style="color:${t.type === 'income' ? 'var(--green)' : 'var(--red)'}; font-weight:600;">${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()} ₽<button class="delete-btn" onclick="deleteItem('transactions', ${t.id})">✕</button></span></div>`;
+};
 
-    // Вывод списка подписок на вкладке «Платежи»
-    const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-    const pListEl = document.getElementById('payments-list');
-    if (data.payments.length === 0) {
-        pListEl.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет активных регулярных платежей</div>';
-    } else {
-        pListEl.innerHTML = data.payments.map(p => `
-            <div class="list-item">
-                <div>
-                    <strong>${p.desc}</strong> <span style="font-size:11px; color:var(--text-muted)">(${p.day} числа каждого месяца)</span>
-                    <div style="font-size:11px; color:var(--accent); margin-top:2px;">Действует включительно до: ${monthNames[p.endMonth]} ${p.endYear} г.</div>
-                </div>
-                <span style="font-weight:600; color:var(--red);">${p.amount.toLocaleString()} ₽<button class="delete-btn" onclick="deleteItem('payments', ${p.id})">✕</button></span>
-            </div>
-        `).join('');
-    }
+document.getElementById('tx-income-list').innerHTML = incomeTx.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px; font-size:13px;">Нет поступлений</div>' : incomeTx.map(formatListItem).join('');
+document.getElementById('tx-expense-list').innerHTML = expenseTx.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px; font-size:13px;">Нет расходов</div>' : expenseTx.map(formatListItem).join('');
+
+document.getElementById('goals-list').innerHTML = data.goals.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет целей</div>' : data.goals.map(g => {
+    const pct = Math.min((g.current / g.target) * 100, 100).toFixed(0);
+    return `<div class="goal-container"><div class="goal-info"><span><strong>${g.name}</strong></span><span style="color:var(--text-muted); font-size:13px;">${g.current.toLocaleString()} / ${g.target.toLocaleString()} ₽ (${pct}%)</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;"><span style="cursor:pointer; color:var(--accent); font-size:12px; font-weight:600;" onclick="depositToGoal(${g.id})">Пополнить</span><span style="cursor:pointer; color:var(--accent); font-size:12px;" onclick="editGoal(${g.id})">Изм.</span><span style="cursor:pointer; color:var(--text-muted); font-size:12px;" onclick="deleteItem('goals', ${g.id})">Удалить</span></div></div>`;
+}).join('');
+
+const activeVisibleDebts = data.debts.filter(d => d.date !== "settled-archived");
+const sortedDebts = [...activeVisibleDebts].sort((a, b) => { if (!a.date) return 1; if (!b.date) return -1; return new Date(a.date) - new Date(b.date); });
+document.getElementById('debts-list').innerHTML = activeVisibleDebts.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет долгов</div>' : sortedDebts.map(d => {
+    let dateText = d.date ? `(срок: ${d.date.split('-').reverse().join('.')})` : `<span style="color:var(--accent); font-weight:500;">(бессрочно)</span>`;
+    return `<div class="list-item"><span><span style="color:${d.type === 'i-owe' ? 'var(--red)' : 'var(--green)'}; font-weight:600;">${d.type === 'i-owe' ? 'Я должен' : 'Мне должны'}</span> — <strong>${d.name}</strong><small style="color:var(--text-muted)"> [${d.desc}]</small> <span style="font-size:11px; color:var(--text-muted)"> ${dateText}</span></span><span style="font-weight:600;">${d.amount.toLocaleString()} ₽<button style="width:auto; display:inline-block; padding:2px 6px; font-size:11px; margin-left:5px; background:var(--tab-bg); color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; cursor:pointer;" onclick="editDebt(${d.id})">Изм.</button><button class="delete-btn" onclick="deleteItem('debts', ${d.id})">✕</button></span></div>`;
+}).join('');
+
+const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+document.getElementById('payments-list').innerHTML = data.payments.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет активных регулярных платежей</div>' : data.payments.map(p => `
+    <div class="list-item"><div><strong>${p.desc}</strong> <span style="font-size:11px; color:var(--text-muted)">(${p.day} числа)</span><div style="font-size:11px; color:var(--accent); margin-top:2px;">Включительно до: ${monthNames[p.endMonth]} ${p.endYear}</div></div><span style="font-weight:600; color:var(--red);">${p.amount.toLocaleString()} ₽<button class="delete-btn" onclick="deleteItem('payments', ${p.id})">✕</button></span></div>
+`).join('');
 }
 // ==========================================
-// ЧАСТЬ 5: ДЕТАЛИЗАЦИЯ И ИНТЕРАКТИВНЫЙ КАЛЕНДАРЬ С УДАЛЕНИЕМ
+// ЧАСТЬ 2-6: ДЕТАЛИЗАЦИЯ ПЛАШЕК И СЕТКА КАЛЕНДАРЯ
 // ==========================================
 
 function showStatModal(type) {
@@ -462,34 +485,6 @@ function showStatModal(type) {
 }
 function closeStatModal() { document.getElementById('modal-statistics').classList.remove('open'); }
 
-// ИНТЕРАКТИВНЫЙ КЛИК ПО ПЛАШКАМ НА КАЛЕНДАРЕ
-function handleCalendarCardClick(type, id, extraData = '') {
-    if (type === 'recurring') {
-        const payment = data.payments.find(p => p.id === id);
-        if (payment) {
-            if (confirm(`Пропустить регулярный платеж "${payment.desc}" (${payment.amount.toLocaleString()} ₽) в этом месяце?`)) {
-                deletePaymentForSingleMonth(id, extraData);
-            }
-        }
-    } 
-    else if (type === 'debt') {
-        const debt = data.debts.find(d => d.id === id);
-        if (debt) {
-            if (confirm(`Удалить долг от/для "${debt.name}" на сумму ${debt.amount.toLocaleString()} ₽ навсегда со всех вкладок?`)) {
-                deleteItem('debts', id);
-            }
-        }
-    }
-    else if (type === 'transaction') {
-        const tx = data.transactions.find(t => t.id === id);
-        if (tx) {
-            if (confirm(`Удалить операцию "${tx.desc}" (${tx.amount.toLocaleString()} ₽) навсегда?`)) {
-                deleteItem('transactions', id);
-            }
-        }
-    }
-}
-
 function initCalendar() {
     const calendarEl = document.getElementById('custom-calendar');
     const selectedMonth = parseInt(document.getElementById('view-month').value);
@@ -517,30 +512,35 @@ function initCalendar() {
         const currentM = String(selectedMonth + 1).padStart(2, '0'); 
         const currentD = String(day).padStart(2, '0');
         const dateStr = `${selectedYear}-${currentM}-${currentD}`;
+        const dateKey = `${selectedYear}-${currentM}`;
 
         const dayTx = data.transactions.filter(t => t.date === dateStr);
-        const dayDebts = data.debts.filter(d => d.date === dateStr);
-        const dayPayments = data.payments.filter(p => p.day === day && isPaymentActiveInMonth(p, selectedMonth, selectedYear));
+        const dayDebts = data.debts.filter(d => d.date === dateStr && d.date !== "settled-archived");
+        const dayPayments = data.payments.filter(p => {
+            if (p.day !== day) return false;
+            if (p.paidExceptions && p.paidExceptions.includes(dateKey)) return true; 
+            return isPaymentActiveInMonth(p, selectedMonth, selectedYear);
+        });
 
         const isToday = (day === realDay && selectedMonth === realMonth && selectedYear === realYear);
         const todayClass = isToday ? 'today-highlight' : '';
 
         let eventsHtml = '<div class="calendar-events-container">';
         
-        // Обычные операции становятся кликабельными
         dayTx.forEach(t => { 
             const sign = t.type === 'income' ? '+' : '-';
-            eventsHtml += `<div class="cal-event-badge ${t.type}" style="cursor:pointer;" onclick="handleCalendarCardClick('transaction', ${t.id})">${sign}${t.amount} ${t.desc}</div>`; 
+            eventsHtml += `<div class="cal-event-badge ${t.type}" onclick="handleCalendarCardClick('transaction', ${t.id})">${sign}${t.amount} ${t.desc}</div>`; 
         });
         
-        // Долги становятся кликабельными (Стираются отовсюду при тапе)
         dayDebts.forEach(d => { 
-            eventsHtml += `<div class="cal-event-badge debt" style="cursor:pointer;" onclick="handleCalendarCardClick('debt', ${d.id})">🤝${d.amount} ${d.name}</div>`; 
+            eventsHtml += `<div class="cal-event-badge debt" onclick="handleCalendarCardClick('debt', ${d.id})">🤝${d.amount} ${d.name}</div>`; 
         });
         
-        // Подписки становятся кликабельными (Убран микро-крестик, теперь весь блок — кнопка)
         dayPayments.forEach(p => {
-            eventsHtml += `<div class="cal-event-badge recurring" style="cursor:pointer;" onclick="handleCalendarCardClick('recurring', ${p.id}, '${dateStr}')">💳${p.amount} ${p.desc}</div>`;
+            const isAlreadyPaid = p.paidExceptions && p.paidExceptions.includes(dateKey);
+            const opStyle = isAlreadyPaid ? 'opacity: 0.5; background-color: #8e8e93 !important;' : '';
+            const statusLabel = isAlreadyPaid ? ' [✔ Оплачен]' : '';
+            eventsHtml += `<div class="cal-event-badge recurring" style="${opStyle}" onclick="handleCalendarCardClick('recurring', ${p.id}, '${dateStr}')">💳${p.amount} ${p.desc}${statusLabel}</div>`;
         });
         
         eventsHtml += '</div>';
@@ -552,8 +552,7 @@ function initCalendar() {
             </div>
         `;
     }
-    html += '</div>'; 
-    calendarEl.innerHTML = html;
+    html += '</div>'; calendarEl.innerHTML = html;
 }
 
 render();
