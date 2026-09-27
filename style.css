@@ -193,19 +193,95 @@ button { width: 100%; padding: 14px; background: var(--accent); color: #fff; bor
    .progress-bar { background: var(--tab-bg); border-radius: 6px; height: 8px; width: 100%; overflow: hidden; }
    .progress-fill { background: var(--green); height: 100%; border-radius: 6px; }
    
-   /* ==========================================
-      5. АВТОНОМНАЯ ТЁМНАЯ СЕТКА КАЛЕНДАРЯ
-      ========================================== */
-   .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 10px; }
-   .calendar-weekday { text-align: center; font-weight: 600; font-size: 12px; color: var(--text-muted); padding: 5px 0; }
-   .calendar-day { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; min-height: 85px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; }
-   .calendar-day-number { font-size: 12px; font-weight: 600; color: var(--text-main); }
-   .calendar-events-container { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; max-height: 60px; overflow-y: auto; }
-   .cal-event-badge { font-size: 9px; font-weight: 600; padding: 2px 4px; border-radius: 4px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-   .cal-event-badge.income { background-color: var(--green); }
-   .cal-event-badge.expense { background-color: var(--red); }
-   .cal-event-badge.debt { background-color: var(--accent); }
-   .calendar-day.empty { background: transparent; border: none; }
+/* ==========================================
+   5. ИДЕАЛЬНЫЙ АДАПТИВНЫЙ ТЁМНЫЙ КАЛЕНДАРЬ
+   ========================================== */
+   .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px; /* Компактные отступы между днями */
+    margin-top: 10px;
+}
+
+.calendar-weekday {
+    text-align: center;
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 3px 0;
+}
+
+.calendar-day {
+    background: #2c2c2e; /* Фиксированный темный фон ячеек */
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    min-height: 75px;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.calendar-day-number {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 2px;
+}
+
+.calendar-events-container {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+}
+
+/* 🌟 ВОЗВРАЩАЕМ ЯРКУЮ ПОДСВЕТКУ ЦВЕТОМ И ВКЛЮЧАЕМ ПЕРЕНОС СТРОК */
+.cal-event-badge {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: #ffffff !important; /* Белый читаемый текст поверх заливки */
+    white-space: normal;       /* РАЗРЕШАЕМ ПЕРЕНОС ДЛИННОГО ТЕКСТА НА СЛЕДУЮЩУЮ СТРОКУ */
+    word-break: break-word;    /* Защита от вылета текста */
+    line-height: 1.1;
+    display: block;
+}
+
+/* Полная заливка плашек сочными цветами Apple */
+.cal-event-badge.income { background-color: #34c759 !important; }    /* Зеленый доход */
+.cal-event-badge.expense { background-color: #ff3b30 !important; }   /* Красный расход */
+.cal-event-badge.debt { background-color: #0a84ff !important; }      /* Синий долг */
+.cal-event-badge.recurring { background-color: #5856d6 !important; } /* Фиолетовая подписка */
+
+.calendar-day.empty {
+    background: transparent;
+    border: none;
+}
+
+/* 🔴 ПОДСВЕТКА СЕГОДНЯШНЕГО ДНЯ */
+.calendar-day.today-highlight {
+    border: 2px solid #ff3b30 !important; /* Яркая красная рамка вокруг ячейки */
+    box-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+    background: rgba(255, 59, 48, 0.05) !important;
+}
+
+/* Стили для кнопки "пропустить" внутри календаря */
+.cal-event-badge button {
+    width: auto;
+    padding: 0 2px;
+    font-size: 7px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+    border: none;
+    color: #fff;
+    float: right;
+    margin-top: 1px;
+    cursor: pointer;
+}
+
    
    /* ==========================================
       6. АДАПТИВНОСТЬ ПОД ЭКРАН IPHONE (ТРИ ПЛАШКИ)
