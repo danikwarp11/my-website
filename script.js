@@ -342,14 +342,15 @@ function resolvePayFromCalendar(isPaid) {
     closeCalPayModal();
 }
 // ==========================================
-// ЧАСТЬ 2-4: МАТЕМАТИЧЕСКИЙ РАСЧЕТ БАЛАНСОВ МЕСЯЦА
+// ЧАСТЬ 2-4: СТАБИЛИЗИРОВАННЫЙ МАТЕМАТИЧЕСКИЙ РАСЧЕТ БАЛАНСОВ
 // ==========================================
 
 function render() {
     const selectedMonth = parseInt(document.getElementById('view-month').value);
     const selectedYear = parseInt(document.getElementById('view-year').value);
 
-    let monthBalance = 0; let grossIncome = 0;
+    let monthBalance = 0; 
+    let grossIncome = 0;
     let totalUndatedDebtsAmount = 0; 
     
     // ТРАНЗАКЦИИ: бессрочные автоматически показываются в текущем выбранном месяце
@@ -361,45 +362,48 @@ function render() {
 
     const currentMonthDebts = [];
     data.debts.forEach(d => {
-        // ЖЕСТКИЙ ФИКС: Если долг погашен (в архиве), полностью игнорируем его в расчетах!
-        if (d.date === "settled-archived") return; 
-        
+        // Если долг бессрочный и не погашен — прибавляем его к общему счетчику бессрочных долгов
         if (!d.date) {
             totalUndatedDebtsAmount += d.amount; 
         } else {
-            const dDate = new Date(d.date);
+            // Вычисляем дату долга. Если он в архиве погашенных — берем месяц и год из его уникального ID создания
+            const dDate = (d.date === "settled-archived") ? new Date(d.id) : new Date(d.date);
+            
+            // Если этот долг (активный или погашенный) принадлежит текущему просматриваемому месяцу
             if (dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear) {
-                currentMonthDebts.push(d); 
+                currentMonthDebts.push(d); // Добавляем в расчеты месяца
             }
         }
     });
 
-
+    // Расчет подписок: фиксируем их сумму в балансе текущего месяца
     let activeRecurringAmount = 0;
     const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
     
-    // Считаем регулярные платежи месяца (активные или принудительно оплаченные)
     data.payments.forEach(p => {
         if (p.paidExceptions && p.paidExceptions.includes(dateKey)) {
-            activeRecurringAmount += p.amount; 
+            activeRecurringAmount += p.amount; // Кнопка "Оплачен": деньги железно остаются списанными!
         } else if (isPaymentActiveInMonth(p, selectedMonth, selectedYear)) {
-            activeRecurringAmount += p.amount; 
+            activeRecurringAmount += p.amount; // Обычный активный шаблон: тоже списывается
         }
     });
 
+    // Математика обычных операций за месяц
     filteredTx.forEach(t => {
         if (t.type === 'income') { monthBalance += t.amount; grossIncome += t.amount; } 
         else { monthBalance -= t.amount; }
     });
 
+    // Корректируем чистый баланс долгами (и активными, и погашенными в этом месяце)
     currentMonthDebts.forEach(d => {
         if (d.type === 'i-owe') monthBalance -= d.amount;
         else if (d.type === 'me-owe') { monthBalance += d.amount; grossIncome += d.amount; }
     });
     
+    // Вычитаем регулярные платежи из чистого баланса
     monthBalance -= activeRecurringAmount;
 
-    // Обновляем плашки бюджетов вверху экрана
+    // Выводим результаты в три плашки шапки
     if (document.getElementById('total-income')) document.getElementById('total-income').innerText = `${grossIncome.toLocaleString()} ₽`;
     const balanceEl = document.getElementById('total-balance');
     if (balanceEl) {
@@ -407,8 +411,10 @@ function render() {
         balanceEl.style.color = monthBalance >= 0 ? 'var(--green)' : 'var(--red)';
     }
     if (document.getElementById('total-undated-debts')) document.getElementById('total-undated-debts').innerText = `${totalUndatedDebtsAmount.toLocaleString()} ₽`;
+
+
 // ==========================================
-// ЧАСТЬ 2-5: РЕНДЕРИНГ СПИСКОВ ОПЕРАЦИЙ, ЦЕЛЕЙ И ДОЛГОВ
+// ЧАСТЬ 2-5: ВЫВОД ОПЕРАЦИЙ, ЦЕЛЕЙ И ДОЛГОВ НА ЭКРАН
 // ==========================================
 
 const incomeTx = filteredTx.filter(t => t.type === 'income');
@@ -427,6 +433,7 @@ document.getElementById('goals-list').innerHTML = data.goals.length === 0 ? '<di
     return `<div class="goal-container"><div class="goal-info"><span><strong>${g.name}</strong></span><span style="color:var(--text-muted); font-size:13px;">${g.current.toLocaleString()} / ${g.target.toLocaleString()} ₽ (${pct}%)</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div><div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;"><span style="cursor:pointer; color:var(--accent); font-size:12px; font-weight:600;" onclick="depositToGoal(${g.id})">Пополнить</span><span style="cursor:pointer; color:var(--accent); font-size:12px;" onclick="editGoal(${g.id})">Изм.</span><span style="cursor:pointer; color:var(--text-muted); font-size:12px;" onclick="deleteItem('goals', ${g.id})">Удалить</span></div></div>`;
 }).join('');
 
+// Скрываем погашенные долги из списка активных долгов на вкладке
 const activeVisibleDebts = data.debts.filter(d => d.date !== "settled-archived");
 const sortedDebts = [...activeVisibleDebts].sort((a, b) => { if (!a.date) return 1; if (!b.date) return -1; return new Date(a.date) - new Date(b.date); });
 document.getElementById('debts-list').innerHTML = activeVisibleDebts.length === 0 ? '<div style="color:var(--text-muted); text-align:center; padding:10px;">Нет долгов</div>' : sortedDebts.map(d => {
@@ -440,9 +447,10 @@ document.getElementById('payments-list').innerHTML = data.payments.length === 0 
 `).join('');
 }
 // ==========================================
-// ЧАСТЬ 2-6: ДЕТАЛИЗАЦИЯ ПЛАШЕК И СЕТКА КАЛЕНДАРЯ
+// ЧАСТЬ 2-6: ИНТЕРАКТИВНАЯ СТАТИСТИКА ПЛАШЕК И СЕТКА КАЛЕНДАРЯ
 // ==========================================
 
+// Продолжение функции render()... Окна детализации при клике по плашкам шапки
 function showStatModal(type) {
     const selectedMonth = parseInt(document.getElementById('view-month').value);
     const selectedYear = parseInt(document.getElementById('view-year').value);
@@ -459,7 +467,14 @@ function showStatModal(type) {
     if (type === 'income') {
         titleEl.innerText = "💼 Детализация доходов";
         const incomes = monthTx.filter(t => t.type === 'income');
-        const debtsToMe = data.debts.filter(d => { if(!d.date || d.type !== 'me-owe') return false; const dDate = new Date(d.date); return dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear; });
+        
+        // Учитываем в доходах ТОЛЬКО те долги, которые нам вернули (ИЛИ вернут) и которые НЕ были просто удалены
+        const debtsToMe = data.debts.filter(d => {
+            if (d.type !== 'me-owe') return false;
+            const dDate = (d.date === "settled-archived") ? new Date(d.id) : (d.date ? new Date(d.date) : null);
+            if (!dDate) return false;
+            return dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear;
+        });
 
         incomes.forEach(t => html += `<div class="stat-modal-item"><span>${t.desc}</span><span style="color:var(--green); font-weight:600;">+${t.amount.toLocaleString()} ₽</span></div>`);
         debtsToMe.forEach(d => html += `<div class="stat-modal-item"><span>🤝 Возврат долга [${d.desc}]: ${d.name}</span><span style="color:var(--green); font-weight:600;">+${d.amount.toLocaleString()} ₽</span></div>`);
@@ -467,14 +482,26 @@ function showStatModal(type) {
     else if (type === 'expense') {
         titleEl.innerText = "📉 Детализация расходов (Вкл. Подписки)";
         const expenses = monthTx.filter(t => t.type === 'expense');
-        const debtsFromMe = data.debts.filter(d => { if(!d.date || d.type !== 'i-owe') return false; const dDate = new Date(d.date); return dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear; });
+        
+        // Учитываем в расходах ТОЛЬКО те долги, которые мы отдали (ИЛИ отдадим) текущего месяца
+        const debtsFromMe = data.debts.filter(d => {
+            if (d.type !== 'i-owe') return false;
+            const dDate = (d.date === "settled-archived") ? new Date(d.id) : (d.date ? new Date(d.date) : null);
+            if (!dDate) return false;
+            return dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear;
+        });
 
         expenses.forEach(t => html += `<div class="stat-modal-item"><span><small style="color:var(--text-muted)">${t.category}</small> ${t.desc}</span><span style="color:var(--red); font-weight:600;">-${t.amount.toLocaleString()} ₽</span></div>`);
         debtsFromMe.forEach(d => html += `<div class="stat-modal-item"><span>🤝 Выплата долга [${d.desc}]: ${d.name}</span><span style="color:var(--red); font-weight:600;">-${d.amount.toLocaleString()} ₽</span></div>`);
         
+        // Добавляем регулярные подписки (и активные шаблоны, и принудительно оплаченные)
+        const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
         data.payments.forEach(p => {
-            if (isPaymentActiveInMonth(p, selectedMonth, selectedYear)) {
-                html += `<div class="stat-modal-item"><span>💳 Подписка: ${p.desc}</span><span style="color:var(--red); font-weight:600;">-${p.amount.toLocaleString()} ₽</span></div>`;
+            const isPaid = p.paidExceptions && p.paidExceptions.includes(dateKey);
+            const isActive = isPaymentActiveInMonth(p, selectedMonth, selectedYear);
+            if (isPaid || isActive) {
+                const label = isPaid ? `💳 Подписка (Оплачено): ${p.desc}` : `💳 Подписка (План): ${p.desc}`;
+                html += `<div class="stat-modal-item"><span>${label}</span><span style="color:var(--red); font-weight:600;">-${p.amount.toLocaleString()} ₽</span></div>`;
             }
         });
     } 
@@ -489,8 +516,12 @@ function showStatModal(type) {
     contentEl.innerHTML = html || '<div style="color:var(--text-muted); text-align:center; padding:15px;">Нет записей.</div>';
     document.getElementById('modal-statistics').classList.add('open');
 }
-function closeStatModal() { document.getElementById('modal-statistics').classList.remove('open'); }
 
+function closeStatModal() { 
+    document.getElementById('modal-statistics').classList.remove('open'); 
+}
+
+// Генерация сетки календаря
 function initCalendar() {
     const calendarEl = document.getElementById('custom-calendar');
     const selectedMonth = parseInt(document.getElementById('view-month').value);
@@ -521,7 +552,11 @@ function initCalendar() {
         const dateKey = `${selectedYear}-${currentM}`;
 
         const dayTx = data.transactions.filter(t => t.date === dateStr);
+        
+        // Показываем на календаре активные долги текущего месяца (погашенные уходят в архив)
         const dayDebts = data.debts.filter(d => d.date === dateStr && d.date !== "settled-archived");
+        
+        // Показываем подписку, если она плановая или принудительно оплачена вручную
         const dayPayments = data.payments.filter(p => {
             if (p.day !== day) return false;
             if (p.paidExceptions && p.paidExceptions.includes(dateKey)) return true; 
@@ -544,7 +579,7 @@ function initCalendar() {
         
         dayPayments.forEach(p => {
             const isAlreadyPaid = p.paidExceptions && p.paidExceptions.includes(dateKey);
-            const opStyle = isAlreadyPaid ? 'opacity: 0.5; background-color: #8e8e93 !important;' : '';
+            const opStyle = isAlreadyPaid ? 'opacity: 0.55; background-color: #8e8e93 !important; text-decoration: line-through;' : '';
             const statusLabel = isAlreadyPaid ? ' [✔ Оплачен]' : '';
             eventsHtml += `<div class="cal-event-badge recurring" style="${opStyle}" onclick="handleCalendarCardClick('recurring', ${p.id}, '${dateStr}')">💳${p.amount} ${p.desc}${statusLabel}</div>`;
         });
@@ -558,7 +593,41 @@ function initCalendar() {
             </div>
         `;
     }
-    html += '</div>'; calendarEl.innerHTML = html;
+    html += '</div>'; 
+    calendarEl.innerHTML = html;
 }
+// Логика кнопок умного удаления ДОЛГА из календаря
+function resolveDebtFromCalendar(isSettled) {
+    const id = parseInt(document.getElementById('cal-debt-id').value);
+    const debt = data.debts.find(d => d.id === id);
+    
+    if (debt) {
+        if (isSettled) {
+            // 1. Создаем на основе долга полноценную транзакцию, чтобы зафиксировать баланс
+            // Если "Я должен" (i-owe) — это становится РАСХОДОМ (expense)
+            // Если "Мне должны" (me-owe) — это становится ДОХОДОМ (income)
+            const txType = (debt.type === 'i-owe') ? 'expense' : 'income';
+            const txCategory = (debt.type === 'i-owe') ? 'Выплата долга' : 'Возврат долга';
+            
+            data.transactions.push({
+                id: Date.now(),
+                amount: debt.amount,
+                type: txType,
+                category: txCategory,
+                desc: `${debt.name} (${debt.desc})`,
+                date: debt.date // Фиксируем в тот же день, где стоял долг
+            });
 
+            // 2. Полностью удаляем сам долг из базы, чтобы он не дублировался и исчез
+            data.debts = data.debts.filter(d => d.id !== id);
+            saveData(); // Сохраняем, пересчитываем баланс и обновляем интерфейс
+        } else {
+            // Если выбрано просто "Удалить" — стираем без создания транзакции
+            deleteItem('debts', id);
+        }
+    }
+    closeCalDebtModal();
+}
+ 
+// Стартовый нативный вызов пересчета при первой загрузке приложения
 render();
