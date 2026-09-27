@@ -11,7 +11,7 @@
 <body>
 
     <div class="app-container">
-        <!-- Шапка приложения -->
+        <!-- Шапка приложения с тремя интерактивными показателями -->
         <header class="main-header">
             <div>
                 <h1>📊 Финансовый Трекер PRO</h1>
@@ -40,13 +40,20 @@
             
             <div class="header-right-side">
                 <div class="balance-cards-group">
-                    <div class="balance-card header-income-card">
+                    <!-- Карточка 1: Общий доход (Интерактивная) -->
+                    <div class="balance-card header-income-card clickable-card" onclick="showStatModal('income')">
                         <span class="balance-label">Общий доход</span>
                         <span id="total-income">0 ₽</span>
                     </div>
-                    <div class="balance-card">
+                    <!-- Карточка 2: Чистый баланс (Интерактивная) -->
+                    <div class="balance-card clickable-card" onclick="showStatModal('expense')">
                         <span class="balance-label">Чистый баланс</span>
                         <span id="total-balance">0 ₽</span>
+                    </div>
+                    <!-- Карточка 3: Бессрочные долги (Интерактивная) -->
+                    <div class="balance-card header-debt-card clickable-card" onclick="showStatModal('undated-debts')">
+                        <span class="balance-label">Бессрочные долги</span>
+                        <span id="total-undated-debts">0 ₽</span>
                     </div>
                 </div>
             </div>
@@ -83,7 +90,6 @@
                     <button onclick="addTransaction()">Добавить операцию</button>
                 </div>
 
-                <!-- РАЗДЕЛЕННЫЕ СПИСКИ ИСТОРИИ -->
                 <div class="split-lists-wrapper">
                     <h3>💼 Поступления и Доходы</h3>
                     <div id="tx-income-list" class="list-container" style="margin-bottom: 20px;"></div>
@@ -170,6 +176,19 @@
             <div class="modal-buttons">
                 <button onclick="closeDebtModal()" class="cancel-btn">Отмена</button>
                 <button onclick="saveDebtModal()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: ИНТЕРАКТИВНАЯ СТАТИСТИКА КАРТОЧЕК -->
+    <div id="modal-statistics" class="modal-backdrop">
+        <div class="modal-window" style="max-width: 450px;">
+            <h3 id="stat-modal-title">📊 Детализация</h3>
+            <div id="stat-modal-content" class="list-container" style="max-height: 300px; margin-top: 15px;">
+                <!-- Сюда скрипт выведет детальные траты/доходы/долги -->
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeStatModal()" style="background:#48484a;">Закрыть</button>
             </div>
         </div>
     </div>
