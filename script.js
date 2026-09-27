@@ -361,13 +361,19 @@ function render() {
 
     const currentMonthDebts = [];
     data.debts.forEach(d => {
+        // ЖЕСТКИЙ ФИКС: Если долг погашен (в архиве), полностью игнорируем его в расчетах!
         if (d.date === "settled-archived") return; 
-        if (!d.date) totalUndatedDebtsAmount += d.amount; 
-        else {
+        
+        if (!d.date) {
+            totalUndatedDebtsAmount += d.amount; 
+        } else {
             const dDate = new Date(d.date);
-            if (dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear) currentMonthDebts.push(d); 
+            if (dDate.getMonth() === selectedMonth && dDate.getFullYear() === selectedYear) {
+                currentMonthDebts.push(d); 
+            }
         }
     });
+
 
     let activeRecurringAmount = 0;
     const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`;
