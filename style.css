@@ -405,3 +405,18 @@ button:hover {
         border-radius: 2px;
     }
 }
+/* Фикс прокрутки лево-право для всего сайта на iPhone */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Фикс поля выбора даты на iOS (чтобы не растягивало экран) */
+input[type="date"] {
+    max-width: 100% !important;
+    width: 100% !important;
+    appearance: none;
+    -webkit-appearance: none;
+    min-height: 47px; /* Удобный размер под палец iOS */
+}

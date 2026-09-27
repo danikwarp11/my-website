@@ -4,19 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Мой Финансовый Трекер PRO</title>
+    <!-- Иконка для экрана Домой на iPhone -->
+    <link rel="apple-touch-icon" href="https://flaticon.com">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
     <div class="app-container">
-        <!-- Шапка приложения с двумя показателями баланса -->
+        <!-- Шапка приложения -->
         <header class="main-header">
             <div>
                 <h1>📊 Финансовый Трекер PRO</h1>
-                <!-- Переключатель месяцев (Убран сентябрь, отсчет с Октября 2026) -->
                 <div class="month-selector-wrapper">
-                    <label for="view-month">Просмотр месяца:</label>
+                    <label for="view-month">Просмотр:</label>
                     <select id="view-month" onchange="changeViewMonth()">
                         <option value="9">Октябрь</option>
                         <option value="10">Ноябрь</option>
@@ -39,14 +40,11 @@
             </div>
             
             <div class="header-right-side">
-                <button id="theme-toggle" onclick="toggleTheme()">🌓 Тема</button>
                 <div class="balance-cards-group">
-                    <!-- Карточка 1: Общий грязный доход -->
                     <div class="balance-card header-income-card">
                         <span class="balance-label">Общий доход</span>
                         <span id="total-income">0 ₽</span>
                     </div>
-                    <!-- Карточка 2: Чистый баланс после вычета трат и долгов -->
                     <div class="balance-card">
                         <span class="balance-label">Чистый баланс</span>
                         <span id="total-balance">0 ₽</span>
@@ -55,7 +53,7 @@
             </div>
         </header>
 
-        <!-- Навигация (Вкладки) -->
+        <!-- Вкладки навигации -->
         <nav class="tab-bar">
             <button class="tab-btn active" onclick="switchTab('transactions-screen')">💸 Операции</button>
             <button class="tab-btn" onclick="switchTab('goals-screen')">🎯 Цели</button>
@@ -72,7 +70,7 @@
                     <input type="text" id="tx-desc" placeholder="Описание">
                     <input type="date" id="tx-date">
                     
-                    <label for="tx-category" class="field-label">Категория:</label>
+                    <label for="tx-category" class="field-label">Тип операции (Категория):</label>
                     <select id="tx-category">
                         <option value="💼 Доход">💼 Доход (Зарплата, фриланс и т.д.)</option>
                         <option value="🍔 Еда">🍔 Еда и продукты</option>
@@ -83,10 +81,6 @@
                         <option value="🛠️ Другое" selected>🛠️ Другое</option>
                     </select>
 
-                    <select id="tx-type" onchange="toggleCategoryStyle()">
-                        <option value="expense">Расход (-)</option>
-                        <option value="income">Доход (+)</option>
-                    </select>
                     <button onclick="addTransaction()">Добавить операцию</button>
                 </div>
                 <h3>История транзакций за выбранный месяц</h3>
@@ -99,9 +93,9 @@
             <section class="app-section">
                 <h2>🎯 Новая цель на покупку</h2>
                 <div class="form-group">
-                    <input type="text" id="goal-name" placeholder="Что хочу купить?">
-                    <input type="number" id="goal-target" placeholder="Сколько стоит (₽)">
-                    <input type="number" id="goal-current" placeholder="Уже накоплено (₽)" value="0">
+                    <input type="text" id="goal-name" placeholder="What to buy?">
+                    <input type="number" id="goal-target" placeholder="Стоимость (₽)">
+                    <input type="number" id="goal-current" placeholder="Накоплено (₽)" value="0">
                     <button onclick="addGoal()">Создать цель</button>
                 </div>
                 <h3>Мои активные цели (постоянно)</h3>
@@ -123,7 +117,7 @@
                     </select>
                     <button onclick="addDebt()">Записать долг</button>
                 </div>
-                <h3>Список всех долгов и обязательств (постоянно)</h3>
+                <h3>Список всех долгов (постоянно)</h3>
                 <div id="debts-list" class="list-container"></div>
             </section>
         </div>
@@ -132,14 +126,12 @@
         <div id="calendar-screen" class="tab-content">
             <section class="app-section">
                 <h2 id="calendar-title">📅 Календарь запланированных трат</h2>
-                <!-- Автономная сетка календаря -->
                 <div id="custom-calendar"></div>
             </section>
         </div>
 
     </div>
 
-    <!-- Подключение файла логики -->
     <script src="script.js"></script>
 </body>
 </html>

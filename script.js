@@ -79,13 +79,14 @@ function addTransaction() {
     const amountInput = document.getElementById('tx-amount');
     const descInput = document.getElementById('tx-desc');
     const categoryInput = document.getElementById('tx-category');
-    const typeInput = document.getElementById('tx-type');
     const dateInput = document.getElementById('tx-date');
 
     const amount = parseFloat(amountInput.value);
     const desc = descInput.value ? descInput.value.trim() : '';
     const category = categoryInput ? categoryInput.value : '🛠️ Другое';
-    const type = typeInput ? typeInput.value : 'expense';
+    
+    // АВТО-ОПРЕДЕЛЕНИЕ: если категория Доход — ставим тип income, иначе expense
+    const type = (category === '💼 Доход') ? 'income' : 'expense';
     let date = dateInput ? dateInput.value : '';
 
     if (!date) {
@@ -102,6 +103,7 @@ function addTransaction() {
     descInput.value = '';
     saveData();
 }
+
 
 // Горячая клавиша Enter для мгновенной записи без мышки
 window.addEventListener('keydown', function(event) {
