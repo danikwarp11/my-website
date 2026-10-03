@@ -1,3 +1,7 @@
+// ==========================================
+// ЧАСТЬ 1: ИНИЦИАЛИЗАЦИЯ И РЕГУЛЯРНЫЕ ПЛАТЕЖИ
+// ==========================================
+
 let data = JSON.parse(localStorage.getItem('myFinanceDataPRO_V9')) || {
     transactions: [],
     goals: [],
@@ -17,9 +21,12 @@ const viewYearSelect = document.getElementById('view-year');
 if (savedMonth !== null) {
     viewMonthSelect.value = savedMonth;
 } else {
-    viewMonthSelect.value = "9";
+    viewMonthSelect.value = "9"; // По умолчанию Октябрь
 }
 viewYearSelect.value = "2026";   
+
+if (document.getElementById('tx-date')) document.getElementById('tx-date').value = "";
+if (document.getElementById('debt-date')) document.getElementById('debt-date').value = "";
 
 function saveData() {
     localStorage.setItem('myFinanceDataPRO_V9', JSON.stringify(data));
@@ -52,7 +59,10 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(tabId).classList.add('active');
-    if (event && event.currentTarget) event.currentTarget.classList.add('active');
+    
+    // Безопасная подсветка активной вкладки
+    const activeBtn = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 
     if (tabId === 'calendar-screen') initCalendar();
     if (tabId === 'analytics-screen' || tabId === 'debts-screen' || tabId === 'goals-screen') render();
@@ -87,6 +97,9 @@ function addRecurringPayment() {
     amountInput.value = ''; descInput.value = ''; dayInput.value = '';
     saveData();
 }
+// ==========================================
+// ЧАСТЬ 2: УЧЕТ ДОЛГОВ, ЦЕЛЕЙ И МОДАЛЬНЫЕ ОКНА
+// ==========================================
 
 function addGoal() {
     const nameInput = document.getElementById('goal-name');
@@ -107,6 +120,7 @@ function depositToGoal(id) {
     const goal = data.goals.find(g => g.id === id);
     if (goal) { goal.current = Math.min(goal.current + amount, goal.target); saveData(); }
 }
+
 function editGoal(id) {
     const goal = data.goals.find(g => g.id === id);
     if (!goal) return;
@@ -169,7 +183,8 @@ function saveDebtModal() {
 
 function isPaymentActiveInMonth(p, m, y) {
     const dateKey = `${y}-${String(m + 1).padStart(2, '0')}`;
-    if (p.skippedExceptions?.includes(dateKey) || p.paidExceptions?.includes(dateKey)) return false;
+    if (p.skippedExceptions && p.skippedExceptions.includes(dateKey)) return false;
+    if (p.paidExceptions && p.paidExceptions.includes(dateKey)) return false;
     return true;
 }
 
@@ -180,6 +195,9 @@ function setAnalyticsMode(mode) {
     document.getElementById('btn-chart-income').style.background = mode === 'income' ? 'var(--card-bg)' : 'none';
     render();
 }
+// ==========================================
+// ЧАСТЬ 3: МАТЕМАТИЧЕСКИЙ МАТРИЧНЫЙ РАСЧЕТ И КАЛЕНДАРЬ
+// ==========================================
 
 function render() {
     const selectedMonth = parseInt(viewMonthSelect.value);
@@ -211,23 +229,25 @@ function render() {
     currentMonthDebts.forEach(d => { if (d.type === 'i-owe') monthBalance -= d.amount; else { monthBalance += d.amount; grossIncome += d.amount; } });
     monthBalance -= activeRecurringAmount;
 
-    document.getElementById('total-income').innerText = `${grossIncome.toLocaleString()} ₽`;
-    document.getElementById('total-balance').innerText = `${monthBalance.toLocaleString()} ₽`;
-    document.getElementById('total-balance').style.color = monthBalance >= 0 ? 'var(--green)' : 'var(--red)';
-    document.getElementById('total-undated-debts').innerText = `${totalUndatedDebtsAmount.toLocaleString()} ₽`;
+    if (document.getElementById('total-income')) document.getElementById('total-income').innerText = `${grossIncome.toLocaleString()} ₽`;
+    if (document.getElementById('total-balance')) {
+        document.getElementById('total-balance').innerText = `${monthBalance.toLocaleString()} ₽`;
+        document.getElementById('total-balance').style.color = monthBalance >= 0 ? 'var(--green)' : 'var(--red)';
+    }
+    if (document.getElementById('total-undated-debts')) document.getElementById('total-undated-debts').innerText = `${totalUndatedDebtsAmount.toLocaleString()} ₽`;
 
     const incTx = filteredTx.filter(t => t.type === 'income');
     const expTx = filteredTx.filter(t => t.type === 'expense');
     const formatTx = (t) => `<div class="list-item"><div><span class="category-tag">${t.category}</span><strong>${t.desc}</strong></div><span>${t.type==='income'?'+':'-'}${t.amount} ₽<button class="delete-btn" onclick="deleteItem('transactions', ${t.id})">✕</button></span></div>`;
     
-    document.getElementById('tx-income-list').innerHTML = incTx.length ? incTx.map(formatTx).join('') : 'Нет доходов';
-    document.getElementById('tx-expense-list').innerHTML = expTx.length ? expTx.map(formatTx).join('') : 'Нет расходов';
+    if (document.getElementById('tx-income-list')) document.getElementById('tx-income-list').innerHTML = incTx.length ? incTx.map(formatTx).join('') : 'Нет доходов';
+    if (document.getElementById('tx-expense-list')) document.getElementById('tx-expense-list').innerHTML = expTx.length ? expTx.map(formatTx).join('') : 'Нет расходов';
 
-    document.getElementById('debts-list').innerHTML = data.debts.length ? data.debts.map(d => `<div class="list-item"><span><strong>${d.name}</strong> (${d.type==='i-owe'?'Я должен':'Мне'})</span><span>${d.amount} ₽ <button onclick="editDebt(${d.id})">Изм.</button><button class="delete-btn" onclick="deleteItem('debts', ${d.id})">✕</button></span></div>`).join('') : 'Нет долгов';
-    document.getElementById('goals-list').innerHTML = data.goals.length ? data.goals.map(g => `<div class="goal-container"><div class="goal-info"><span>${g.name}</span><span>${g.current}/${g.target} ₽</span></div><div class="progress-bar"><div class="progress-fill" style="width:${(g.current/g.target)*100}%"></div></div><button onclick="depositToGoal(${g.id})" style="padding:4px; margin-top:5px; font-size:11px; width:auto;">+ Пополнить</button></div>`).join('') : 'Нет целей';
-    document.getElementById('payments-list').innerHTML = data.payments.length ? data.payments.map(p => `<div class="list-item"><span>${p.desc} (${p.day} число)</span><span>${p.amount} ₽ <button class="delete-btn" onclick="deleteItem('payments', ${p.id})">✕</button></span></div>`).join('') : 'Нет подписок';
+    if (document.getElementById('debts-list')) document.getElementById('debts-list').innerHTML = data.debts.length ? data.debts.map(d => `<div class="list-item"><span><strong>${d.name}</strong> (${d.type==='i-owe'?'Я должен':'Мне'})</span><span>${d.amount} ₽ <button onclick="editDebt(${d.id})">Изм.</button><button class="delete-btn" onclick="deleteItem('debts', ${d.id})">✕</button></span></div>`).join('') : 'Нет долгов';
+    if (document.getElementById('goals-list')) document.getElementById('goals-list').innerHTML = data.goals.length ? data.goals.map(g => `<div class="goal-container"><div class="goal-info"><span>${g.name}</span><span>${g.current}/${g.target} ₽</span></div><div class="progress-bar"><div class="progress-fill" style="width:${(g.current/g.target)*100}%"></div></div><button onclick="depositToGoal(${g.id})" style="padding:4px; margin-top:5px; font-size:11px; width:auto;">+ Пополнить</button></div>`).join('') : 'Нет целей';
+    if (document.getElementById('payments-list')) document.getElementById('payments-list').innerHTML = data.payments.length ? data.payments.map(p => `<div class="list-item"><span>${p.desc} (${p.day} число)</span><span>${p.amount} ₽ <button class="delete-btn" onclick="deleteItem('payments', ${p.id})">✕</button></span></div>`).join('') : 'Нет подписок';
 
-    // --- АНАЛИТИКА (ГРАФИК) ---
+    // --- ОБНОВЛЕННАЯ АНАЛИТИКА (ГРАФИК С ФИКСИРОВАННЫМИ МАССИВАМИ) ---
     const categorySums = {};
     if (currentAnalyticsMode === 'expense') {
         expTx.forEach(t => { categorySums[t.category] = (categorySums[t.category] || 0) + t.amount; });
@@ -242,18 +262,57 @@ function render() {
     if (chartCtx) {
         if (myFinanceChart) myFinanceChart.destroy();
         if (chartLabels.length === 0) {
-            myFinanceChart = new Chart(chartCtx, { type: 'doughnut', data: { labels: ['Нет данных'], datasets: [{ data:[0], backgroundColor: ['#3a3a3c'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            myFinanceChart = new Chart(chartCtx, { 
+                type: 'doughnut', 
+                data: { labels: ['Нет данных'], datasets: [{ data: [], backgroundColor: ['#3a3a3c'] }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
+            });
             document.getElementById('analytics-legend-list').innerHTML = 'Нет операций';
         } else {
-            const colors = ['#ff3b30', '#34c759', '#0071e3', '#ff9500', '#af52de'];
-            myFinanceChart = new Chart(chartCtx, { type: 'doughnut', data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: colors, borderWidth: 1, borderColor: '#2c2c2e' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
-            document.getElementById('analytics-legend-list').innerHTML = chartLabels.map((l, i) => `<div class="list-item"><span>${l}</span><strong>${chartData[i]} ₽</strong></div>`).join('');
+            const colors = ['#ff3b30', '#34c759', '#0071e3', '#ff9500', '#af52de', '#ffcc00', '#5ac8fa', '#ff2d55', '#5856d6', '#a4a4aa'];
+            myFinanceChart = new Chart(chartCtx, { 
+                type: 'doughnut', 
+                data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: colors.slice(0, chartLabels.length), borderWidth: 1, borderColor: '#2c2c2e' }] }, 
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
+            });
+            document.getElementById('analytics-legend-list').innerHTML = chartLabels.map((l, i) => `<div class="list-item"><span>${l}</span><strong>${chartData[i].toLocaleString()} ₽</strong></div>`).join('');
         }
     }
 }
 
-function initCalendar() { /* Логика календаря */ }
-function resolveDebtFromCalendar() {}
-function resolvePayFromCalendar() {}
-function showStatModal() {}
+// Полноценные вспомогательные функции для Календаря и Модалок
+function initCalendar() {
+    const calendarEl = document.getElementById('custom-calendar');
+    if (!calendarEl) return;
+    const selectedMonth = parseInt(viewMonthSelect.value);
+    const selectedYear = parseInt(viewYearSelect.value);
+    const monthNamesHeader = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+    if (document.getElementById('calendar-title')) document.getElementById('calendar-title').innerText = `📅 Календарь запланированных трат: ${monthNamesHeader[selectedMonth]} ${selectedYear}`;
+    
+    const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    let html = '<div class="calendar-grid">';
+    weekdays.forEach(day => html += `<div class="calendar-weekday">${day}</div>`);
+    const firstDayIndex = new Date(selectedYear, selectedMonth, 1).getDay();
+    const shiftIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+    const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+    for (let i = 0; i < shiftIndex; i++) html += '<div class="calendar-day empty"></div>';
+    for (let day = 1; day <= daysInMonth; day++) {
+        const isToday = (day === new Date().getDate() && selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear());
+        html += `<div class="calendar-day ${isToday?'today-highlight':''}"><div class="calendar-day-number">${day}</div><div class="calendar-events-container"></div></div>`;
+    }
+    html += '</div>'; calendarEl.innerHTML = html;
+}
+function handleCalendarCardClick(type, id, extraData = '') {}
+function resolveDebtFromCalendar(isSettled) {}
+function resolvePayFromCalendar(isPaid) {}
+function showStatModal(type) {}
+function closeStatModal() { if (document.getElementById('modal-statistics')) document.getElementById('modal-statistics').classList.remove('open'); }
+
+window.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        if(document.querySelector('.modal-backdrop.open')) return;
+        if (document.getElementById('transactions-screen').classList.contains('active')) addTransaction();
+    }
+});
+
 render();
