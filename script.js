@@ -242,7 +242,7 @@ function render() {
     if (chartCtx) {
         if (myFinanceChart) myFinanceChart.destroy();
         if (chartLabels.length === 0) {
-            myFinanceChart = new Chart(chartCtx, { type: 'doughnut', data: { labels: ['Нет данных'], datasets: [{ data:[1], backgroundColor: ['#3a3a3c'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+            myFinanceChart = new Chart(chartCtx, { type: 'doughnut', data: { labels: ['Нет данных'], datasets: [{ data:[0], backgroundColor: ['#3a3a3c'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
             document.getElementById('analytics-legend-list').innerHTML = 'Нет операций';
         } else {
             const colors = ['#ff3b30', '#34c759', '#0071e3', '#ff9500', '#af52de'];
