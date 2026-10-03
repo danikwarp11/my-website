@@ -1,26 +1,22 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Мой Финансовый Трекер PRO</title>
-    <link rel="apple-touch-icon" href="icon.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-
     <div class="app-container">
-        <!-- Шапка приложения с тремя интерактивными показателями -->
+        
+        <!-- ШАПКА ПРИЛОЖЕНИЯ -->
         <header class="main-header">
             <div>
-                <h1>📊 Финансовый Трекер PRO</h1>
-                <div class="month-selector-wrapper">
-                    <label for="view-month">Просмотр:</label>
+                <h1>Финансы</h1>
+                <div class="month-selector-wrapper" style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                    <button onclick="stepMonth(-1)" style="width: auto; padding: 4px 10px; background: var(--tab-bg); border-radius: 6px; font-size: 11px; color: var(--text-main); border: none; cursor: pointer;">◀</button>
                     <select id="view-month" onchange="changeViewMonth()">
-                        <option value="9">Октябрь</option>
-                        <option value="10">Ноябрь</option>
-                        <option value="11">Декабрь</option>
                         <option value="0">Январь</option>
                         <option value="1">Февраль</option>
                         <option value="2">Март</option>
@@ -29,235 +25,267 @@
                         <option value="5">Июнь</option>
                         <option value="6">Июль</option>
                         <option value="7">Август</option>
+                        <option value="8">Сентябрь</option>
+                        <option value="9">Октябрь</option>
+                        <option value="10">Ноябрь</option>
+                        <option value="11">Декабрь</option>
                     </select>
                     <select id="view-year" onchange="changeViewMonth()">
-                        <option value="2026" selected>2026</option>
+                        <option value="2026">2026</option>
                         <option value="2027">2027</option>
-                        <option value="2028">2028</option>
                     </select>
+                    <button onclick="stepMonth(1)" style="width: auto; padding: 4px 10px; background: var(--tab-bg); border-radius: 6px; font-size: 11px; color: var(--text-main); border: none; cursor: pointer;">▶</button>
                 </div>
             </div>
             
             <div class="header-right-side">
                 <div class="balance-cards-group">
-                    <div class="balance-card header-income-card clickable-card" onclick="showStatModal('income')">
-                        <span class="balance-label">Общий доход</span>
-                        <span id="total-income">0 ₽</span>
+                    <div class="balance-card clickable-card" onclick="showStatModal('income')">
+                        <span class="balance-label">Доход</span>
+                        <div id="total-income">0 ₽</div>
                     </div>
-                    <div class="balance-card clickable-card" onclick="showStatModal('expense')">
-                        <span class="balance-label">Чистый баланс</span>
-                        <span id="total-balance">0 ₽</span>
+                    <div class="balance-card">
+                        <span class="balance-label">Баланс</span>
+                        <div id="total-balance">0 ₽</div>
                     </div>
-                    <div class="balance-card header-debt-card clickable-card" onclick="showStatModal('undated-debts')">
-                        <span class="balance-label">Бессрочные долги</span>
-                        <span id="total-undated-debts">0 ₽</span>
+                    <div class="balance-card clickable-card" onclick="showStatModal('undated-debts')">
+                        <span class="balance-label">Бессроч. долги</span>
+                        <div id="total-undated-debts">0 ₽</div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- Вкладки навигации с поддержкой скролла на iOS -->
-        <nav class="tab-bar" style="overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch;">
-            <button class="tab-btn active" onclick="switchTab('transactions-screen')">💸 Операции</button>
-            <button class="tab-btn" onclick="switchTab('goals-screen')">🎯 Цели</button>
-            <button class="tab-btn" onclick="switchTab('debts-screen')">🤝 Долги</button>
-            <button class="tab-btn" onclick="switchTab('payments-screen')">💳 Платежи</button>
-            <button class="tab-btn" onclick="switchTab('calendar-screen')">📅 Календарь</button>
-        </nav>
+        <!-- НАВИГАЦИОННЫЕ ВКЛАДКИ -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('transactions-screen')">Операции</button>
+            <button class="tab-btn" onclick="switchTab('calendar-screen')">Календарь</button>
+            <button class="tab-btn" onclick="switchTab('analytics-screen')">Аналитика</button>
+        </div>
 
-        <!-- ЭКРАН 1: ОПЕРАЦИИ -->
+        <!-- ЭКРАН 1: ОПЕРАЦИИ, ЦЕЛИ И ДОЛГИ -->
         <div id="transactions-screen" class="tab-content active">
-            <section class="app-section">
-                <h2>Новая операция (Текущая или Планируемая)</h2>
-                <div class="form-group">
-                    <input type="number" id="tx-amount" placeholder="Сумма (₽)">
-                    <input type="text" id="tx-desc" placeholder="Описание (необязательно)">
-                    <input type="date" id="tx-date">
-                    
-                    <label for="tx-category" class="field-label">Тип операции (Категория):</label>
-                    <select id="tx-category">
-                        <option value="💼 Доход">💼 Доход (Зарплата, фриланс и т.д.)</option>
-                        <option value="🍔 Еда">🍔 Еда и продукты</option>
-                        <option value="🏠 Жилье">🏠 Жилье и коммуналка</option>
-                        <option value="🚗 Транспорт">🚗 Транспорт и такси</option>
-                        <option value="🎉 Развлечения">🎉 Развлечения и отдых</option>
-                        <option value="🛍️ Покупки">🛍️ Покупки и одежда</option>
-                        <option value="🛠️ Другое" selected>🛠️ Другое</option>
-                    </select>
-
-                    <button onclick="addTransaction()">Добавить операцию</button>
+            <div class="app-section" style="margin-bottom: 20px;">
+                <h2>➕ Добавить операцию</h2>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label class="field-label">Сумма (₽)</label>
+                        <input type="number" id="tx-amount" placeholder="0" inputmode="decimal">
+                    </div>
+                    <div>
+                        <label class="field-label">Категория</label>
+                        <select id="tx-category">
+                            <option value="💼 Доход">💼 Доход</option>
+                            <option value="🛒 Продукты">🛒 Продукты</option>
+                            <option value="🚗 Транспорт">🚗 Транспорт</option>
+                            <option value="☕ Кафе">☕ Кафе</option>
+                            <option value="🎬 Развлечения">🎬 Развлечения</option>
+                            <option value="🛠️ Другое" selected>🛠️ Другое</option>
+                        </select>
+                    </div>
                 </div>
+                <div class="form-group">
+                    <label class="field-label">Описание (необязательно)</label>
+                    <input type="text" id="tx-desc" placeholder="На что потрачено">
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Дата (пусто — бессрочно)</label>
+                    <input type="date" id="tx-date">
+                </div>
+                <button onclick="addTransaction()">Сохранить операцию</button>
+            </div>
 
-                <div class="split-lists-wrapper">
-                    <h3>💼 Поступления и Доходы</h3>
-                    <div id="tx-income-list" class="list-container" style="margin-bottom: 20px;"></div>
-
-                    <h3>📉 Расходы и Траты</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div class="app-section">
+                    <h2>Поступления</h2>
+                    <div id="tx-income-list" class="list-container"></div>
+                </div>
+                <div class="app-section">
+                    <h2>Расходы</h2>
                     <div id="tx-expense-list" class="list-container"></div>
                 </div>
-            </section>
-        </div>
-        <!-- ЭКРАН 2: ЦЕЛИ -->
-        <div id="goals-screen" class="tab-content">
-            <section class="app-section">
-                <h2>🎯 Новая цель на покупку</h2>
-                <div class="form-group">
-                    <input type="text" id="goal-name" placeholder="Что хочу купить?">
-                    <input type="number" id="goal-target" placeholder="Полная стоимость (₽)">
-                    <input type="number" id="goal-current" placeholder="Уже накоплено (₽)" value="0">
-                    <button onclick="addGoal()">Создать цель</button>
+            </div>
+
+            <div class="app-section" style="margin-bottom: 20px;">
+                <h2>🤝 Учет долгов</h2>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label class="field-label">Имя человека</label>
+                        <input type="text" id="debt-name" placeholder="Кто">
+                    </div>
+                    <div>
+                        <label class="field-label">Сумма долга</label>
+                        <input type="number" id="debt-amount" placeholder="0">
+                    </div>
                 </div>
-                <h3>Мои активные цели</h3>
-                <div id="goals-list" class="list-container"></div>
-            </section>
-        </div>
-
-        <!-- ЭКРАН 3: ДОЛГИ -->
-        <div id="debts-screen" class="tab-content">
-            <section class="app-section">
-                <h2>🤝 Новый долг</h2>
-                <div class="form-group">
-                    <input type="text" id="debt-name" placeholder="Имя человека">
-                    <input type="number" id="debt-amount" placeholder="Сумма (₽)">
-                    <input type="text" id="debt-desc" placeholder="За что долг? (необязательно)">
-                    <input type="date" id="debt-date">
-                    <select id="debt-type">
-                        <option value="i-owe">Я должен (-)</option>
-                        <option value="me-owe">Мне должны (+)</option>
-                    </select>
-                    <button onclick="addDebt()">Записать долг</button>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label class="field-label">Тип долга</label>
+                        <select id="debt-type">
+                            <option value="i-owe">Я должен</option>
+                            <option value="me-owe">Мне должны</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Дата возврата</label>
+                        <input type="date" id="debt-date">
+                    </div>
                 </div>
-                <h3>Список всех долгов</h3>
-                <div id="debts-list" class="list-container"></div>
-            </section>
-        </div>
-
-        <!-- ЭКРАН 4: РЕГУЛЯРНЫЕ ПЛАТЕЖИ -->
-        <div id="payments-screen" class="tab-content">
-            <section class="app-section">
-                <h2>💳 Новый регулярный платеж (Подписки, Рассрочки)</h2>
                 <div class="form-group">
-                    <input type="number" id="pay-amount" placeholder="Сумма платежа (₽)">
-                    <input type="text" id="pay-desc" placeholder="Назначение (например, Интернет)">
-                    <input type="number" id="pay-day" placeholder="Какого числа платить? (1-31)" min="1" max="31">
-                    
-                    <label for="pay-end-month" class="field-label">По какой месяц платить включительно:</label>
-                    <select id="pay-end-month">
-                        <option value="9">Октябрь</option>
-                        <option value="10">Ноябрь</option>
-                        <option value="11">Декабрь</option>
-                        <option value="0">Январь</option>
-                        <option value="1">Февраль</option>
-                        <option value="2">Март</option>
-                        <option value="3">Апрель</option>
-                        <option value="4">Май</option>
-                        <option value="5">Июнь</option>
-                        <option value="6">Июль</option>
-                        <option value="7">Август</option>
-                    </select>
-                    
-                    <label for="pay-end-year" class="field-label">Год окончания:</label>
-                    <select id="pay-end-year">
-                        <option value="2026" selected>2026</option>
-                        <option value="2027">2027</option>
-                        <option value="2028">2028</option>
-                    </select>
-
-                    <button onclick="addRecurringPayment()">Создать регулярный платеж</button>
+                    <label class="field-label">Комментарий</label>
+                    <input type="text" id="debt-desc" placeholder="За что долг">
                 </div>
-                <h3>Мои активные регулярные подписки и платежи</h3>
-                <div id="payments-list" class="list-container"></div>
-            </section>
+                <button onclick="addDebt()" style="background: #ff9500;">Зафиксировать долг</button>
+                <div id="debts-list" class="list-container" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="app-section">
+                <h2>🎯 Копилка на цели</h2>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                    <div style="grid-column: span 1;">
+                        <label class="field-label">Название цели</label>
+                        <input type="text" id="goal-name" placeholder="На машину">
+                    </div>
+                    <div>
+                        <label class="field-label">Надо собрать</label>
+                        <input type="number" id="goal-target" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="field-label">Уже есть</label>
+                        <input type="number" id="goal-current" value="0">
+                    </div>
+                </div>
+                <button onclick="addGoal()" style="background: var(--green);">Создать цель</button>
+                <div id="goals-list" style="margin-top: 15px;"></div>
+            </div>
         </div>
 
-        <!-- ЭКРАН 5: КАЛЕНДАРЬ -->
+        <!-- ЭКРАН 2: КАЛЕНДАРЬ -->
         <div id="calendar-screen" class="tab-content">
-            <section class="app-section">
+            <div class="app-section" style="margin-bottom: 20px;">
                 <h2 id="calendar-title">📅 Календарь запланированных трат</h2>
                 <div id="custom-calendar"></div>
-            </section>
+            </div>
+
+            <div class="app-section">
+                <h2>💳 Регулярные подписки и платежи</h2>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label class="field-label">Сумма списания</label>
+                        <input type="number" id="pay-amount" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="field-label">Число месяца (1-31)</label>
+                        <input type="number" id="pay-day" placeholder="15">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="field-label">Название платежа / Подписки</label>
+                    <input type="text" id="pay-desc" placeholder="Яндекс Плюс, ЖКХ...">
+                </div>
+                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label class="field-label">Месяц окончания</label>
+                        <select id="pay-end-month">
+                            <option value="0">Январь</option><option value="1">Февраль</option>
+                            <option value="2">Март</option><option value="3">Апрель</option>
+                            <option value="4">Май</option><option value="5">Июнь</option>
+                            <option value="6">Июль</option><option value="7">Август</option>
+                            <option value="8">Сентябрь</option><option value="9">Октябрь</option>
+                            <option value="10">Ноябрь</option><option value="11" selected>Декабрь</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="field-label">Год окончания</label>
+                        <select id="pay-end-year">
+                            <option value="2026" selected>2026</option>
+                            <option value="2027">2027</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="addRecurringPayment()" style="background: #5856d6;">Добавить подписку</button>
+                <div id="payments-list" class="list-container" style="margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН 3: АНАЛИТИКА -->
+        <div id="analytics-screen" class="tab-content">
+            <div class="app-section">
+                <h2>📊 Финансовая аналитика</h2>
+                <div class="analytics-toggle-wrapper" style="display: flex; background: var(--tab-bg); padding: 3px; border-radius: 8px; margin-bottom: 20px;">
+                    <button id="btn-chart-expense" onclick="setAnalyticsMode('expense')" style="flex: 1; padding: 8px; font-size: 13px; border: none; border-radius: 6px; background: var(--card-bg); color: var(--text-main); cursor: pointer; font-weight: 600;">📉 Расходы</button>
+                    <button id="btn-chart-income" onclick="setAnalyticsMode('income')" style="flex: 1; padding: 8px; font-size: 13px; border: none; border-radius: 6px; background: none; color: var(--text-muted); cursor: pointer; font-weight: 600;">💼 Доходы</button>
+                </div>
+                <div style="position: relative; height: 260px; width: 100%; display: flex; justify-content: center; align-items: center;">
+                    <canvas id="financeCircleChart"></canvas>
+                </div>
+                <div id="analytics-legend-list" style="margin-top: 25px;" class="list-container"></div>
+            </div>
         </div>
 
     </div>
 
-    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: РЕДАКТИРОВАНИЕ ЦЕЛИ -->
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+    <div id="modal-statistics" class="modal-backdrop">
+        <div class="modal-window" style="max-width: 450px;">
+            <h3 id="stat-modal-title">Детализация</h3>
+            <div id="stat-modal-content" class="list-container" style="max-height: 300px; margin-top: 15px;"></div>
+            <div class="modal-buttons"><button class="cancel-btn" onclick="closeStatModal()">Закрыть</button></div>
+        </div>
+    </div>
+
     <div id="modal-edit-goal" class="modal-backdrop">
         <div class="modal-window">
-            <h3>✏️ Изменить цель</h3>
+            <h3>🎯 Изменить цель</h3>
             <input type="hidden" id="edit-goal-id">
-            <label class="modal-label">Название:</label>
-            <input type="text" id="edit-goal-name">
-            <label class="modal-label">Полная стоимость (₽):</label>
-            <input type="number" id="edit-goal-target">
-            <label class="modal-label">Уже накоплено (₽):</label>
-            <input type="number" id="edit-goal-current">
+            <label class="modal-label">Название цели</label><input type="text" id="edit-goal-name">
+            <label class="modal-label">Стоимость (₽)</label><input type="number" id="edit-goal-target">
+            <label class="modal-label">Собрано (₽)</label><input type="number" id="edit-goal-current">
             <div class="modal-buttons">
-                <button onclick="closeGoalModal()" class="cancel-btn">Отмена</button>
+                <button class="cancel-btn" onclick="closeGoalModal()">Отмена</button>
                 <button onclick="saveGoalModal()">Сохранить</button>
             </div>
         </div>
     </div>
 
-    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: РЕДАКТИРОВАНИЕ ДОЛГА -->
     <div id="modal-edit-debt" class="modal-backdrop">
         <div class="modal-window">
-            <h3>✏️ Изменить долг</h3>
+            <h3>🤝 Редактировать долг</h3>
             <input type="hidden" id="edit-debt-id">
-            <label class="modal-label">Имя человека:</label>
-            <input type="text" id="edit-debt-name">
-            <label class="modal-label">Сумма (₽):</label>
-            <input type="number" id="edit-debt-amount">
-            <label class="modal-label">За что долг:</label>
-            <input type="text" id="edit-debt-desc">
-            <label class="modal-label">Дата выплаты (календарь):</label>
-            <input type="date" id="edit-debt-date">
+            <label class="modal-label">Имя человека</label><input type="text" id="edit-debt-name">
+            <label class="modal-label">Сумма (₽)</label><input type="number" id="edit-debt-amount">
+            <label class="modal-label">Срок выплаты</label><input type="date" id="edit-debt-date">
+            <label class="modal-label">Комментарий</label><input type="text" id="edit-debt-desc">
             <div class="modal-buttons">
-                <button onclick="closeDebtModal()" class="cancel-btn">Отмена</button>
+                <button class="cancel-btn" onclick="closeDebtModal()">Отмена</button>
                 <button onclick="saveDebtModal()">Сохранить</button>
             </div>
         </div>
     </div>
 
-    <!-- ВСПЛЫВАЮЩЕЕ ОКНО: ИНТЕРАКТИВНАЯ СТАТИСТИКА КАРТОЧЕК -->
-    <div id="modal-statistics" class="modal-backdrop">
-        <div class="modal-window" style="max-width: 450px;">
-            <h3 id="stat-modal-title">📊 Детализация</h3>
-            <div id="stat-modal-content" class="list-container" style="max-height: 300px; margin-top: 15px;"></div>
-            <div class="modal-buttons">
-                <button onclick="closeStatModal()" style="background:#48484a;">Закрыть</button>
-            </div>
+    <div id="modal-calendar-debt" class="modal-backdrop">
+        <div class="modal-window">
+            <h3>Управление долгом</h3>
+            <input type="hidden" id="cal-debt-id">
+            <p id="cal-debt-text" style="font-size: 14px; text-align: center; color: var(--text-main); margin-bottom: 20px;"></p>
+            <button onclick="resolveDebtFromCalendar(true)" style="background: var(--green); margin-bottom: 10px;">✅ Погашен (Создать транзакцию)</button>
+            <button onclick="resolveDebtFromCalendar(false)" style="background: var(--red); margin-bottom: 10px;">✕ Удалить долг насовсем</button>
+            <button class="cancel-btn" onclick="closeCalDebtModal()">Отмена</button>
+        </div>
+    </div>
+
+    <div id="modal-calendar-pay" class="modal-backdrop">
+        <div class="modal-window">
+            <h3>Управление платежом</h3>
+            <input type="hidden" id="cal-pay-id">
+            <input type="hidden" id="cal-pay-date">
+            <p id="cal-pay-text" style="font-size: 14px; text-align: center; color: var(--text-main); margin-bottom: 20px;"></p>
+            <button onclick="resolvePayFromCalendar(true)" style="background: var(--green); margin-bottom: 10px;">✔ Отметить как Оплаченный</button>
+            <button onclick="resolvePayFromCalendar(false)" style="background: var(--tab-bg); margin-bottom: 10px; color: var(--text-main);">⏭ Пропустить в этом месяце</button>
+            <button class="cancel-btn" onclick="closeCalPayModal()">Отмена</button>
         </div>
     </div>
 
     <script src="script.js"></script>
-        <!-- ВСПЛЫВАЮЩЕЕ ОКНО: УПРАВЛЕНИЕ ДОЛГОМ ИЗ КАЛЕНДАРЯ -->
-        <div id="modal-calendar-debt" class="modal-backdrop">
-            <div class="modal-window">
-                <h3>🤝 Действие с долгом</h3>
-                <p style="text-align:center; font-size:14px; color:var(--text-muted);" id="cal-debt-text"></p>
-                <input type="hidden" id="cal-debt-id">
-                <div class="modal-buttons" style="flex-direction: column; gap: 8px;">
-                    <button onclick="resolveDebtFromCalendar(true)" style="background:var(--green);">Долг погашен (баланс не изменится)</button>
-                    <button onclick="resolveDebtFromCalendar(false)" style="background:var(--red);">Удалить долг (баланс пересчитается)</button>
-                    <button onclick="closeCalDebtModal()" class="cancel-btn">Отмена</button>
-                </div>
-            </div>
-        </div>
-    
-        <!-- ВСПЛЫВАЮЩЕЕ ОКНО: УПРАВЛЕНИЕ ПЛАТЕЖОМ ИЗ КАЛЕНДАРЯ -->
-        <div id="modal-calendar-pay" class="modal-backdrop">
-            <div class="modal-window">
-                <h3>💳 Действие с платежом</h3>
-                <p style="text-align:center; font-size:14px; color:var(--text-muted);" id="cal-pay-text"></p>
-                <input type="hidden" id="cal-pay-id">
-                <input type="hidden" id="cal-pay-date">
-                <div class="modal-buttons" style="flex-direction: column; gap: 8px;">
-                    <button onclick="resolvePayFromCalendar(true)" style="background:var(--accent);">Платеж оплачен (деньги спишутся)</button>
-                    <button onclick="resolvePayFromCalendar(false)" style="background:#ff9500;">Пропустить в этом месяце (деньги вернутся)</button>
-                    <button onclick="closeCalPayModal()" class="cancel-btn">Отмена</button>
-                </div>
-            </div>
-        </div>
-    
 </body>
 </html>

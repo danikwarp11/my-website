@@ -1,25 +1,19 @@
-/* ==========================================
-   1. ГЛОБАЛЬНЫЕ ТЕМНЫЕ ПЕРЕМЕННЫЕ (TRUE DARK)
-   ========================================== */
-   :root {
-    --bg-color: #1c1c1e;        /* Фон iOS/macOS */
-    --card-bg: #2c2c2e;         /* Фон для карточек */
-    --text-main: #f5f5f7;       /* Основной текст */
-    --text-muted: #aeaea2;      /* Приглушенный серый текст */
-    --accent: #0a84ff;          /* Синий акцент */
-    --green: #34c759;           /* Зеленый доход */
-    --red: #ff3b30;             /* Красный расход */
-    --border-color: #48484a;    /* Темные рамки */
-    --tab-bg: #3a3a3c;          /* Фон под вкладками */
+:root {
+    --bg-color: #1c1c1e;
+    --card-bg: #2c2c2e;
+    --text-main: #f5f5f7;
+    --text-muted: #aeaea2;
+    --accent: #0a84ff;
+    --green: #34c759;
+    --red: #ff3b30;
+    --border-color: #48484a;
+    --tab-bg: #3a3a3c;
 }
-
-/* Фикс прокрутки лево-право для всего сайта на iPhone */
 html, body {
     max-width: 100%;
     overflow-x: hidden;
     position: relative;
 }
-
 body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
     background-color: var(--bg-color);
@@ -28,48 +22,32 @@ body {
     padding: 30px 20px;
     display: flex;
     justify-content: center;
-    transition: background 0.3s, color 0.3s;
     -webkit-font-smoothing: antialiased;
 }
-
 .app-container {
     width: 100%;
     max-width: 750px;
 }
-
-/* ==========================================
-   2. ШАПКА И ИНТЕРАКТИВНЫЕ КАРТОЧКИ БАЛАНСА
-   ========================================== */
 .main-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
 }
-
 .main-header h1 {
     font-size: 24px;
     font-weight: 700;
     margin: 0;
 }
-
-.month-selector-wrapper {
-    margin-top: 8px;
-    font-size: 13px;
-    color: var(--text-muted);
-}
-
 .month-selector-wrapper select {
-    padding: 6px 10px;
+    padding: 6px 8px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
     background: var(--card-bg);
     color: var(--text-main);
-    margin-left: 5px;
     font-size: 13px;
     outline: none;
 }
-
 .header-right-side {
     text-align: right;
     display: flex;
@@ -79,13 +57,11 @@ body {
     width: 100%;
     max-width: 480px;
 }
-
 .balance-cards-group {
     display: flex;
     gap: 12px;
     width: 100%;
 }
-
 .balance-card {
     flex: 1;
     background: var(--card-bg);
@@ -95,21 +71,16 @@ body {
     text-align: right;
     box-sizing: border-box;
 }
-
-/* Интерактивный эффект клика на карточку в стиле iOS */
 .clickable-card {
     cursor: pointer;
     transition: transform 0.1s ease, background-color 0.2s;
 }
-
 .clickable-card:hover {
     background-color: #3a3a3c;
 }
-
 .clickable-card:active {
-    transform: scale(0.96); /* Эффект продавливания при тапе пальцем */
+    transform: scale(0.96);
 }
-
 .balance-label {
     display: block;
     font-size: 10px;
@@ -119,18 +90,13 @@ body {
     margin-bottom: 2px;
     white-space: nowrap;
 }
-
 .balance-value, #total-income, #total-balance, #total-undated-debts {
     font-size: 16px;
     font-weight: 700;
 }
-
 #total-income { color: var(--green); }
-#total-undated-debts { color: #ff9500; } /* Оранжевый цвет для бессрочных долгов */
+#total-undated-debts { color: #ff9500; }
 
-/* ==========================================
-   3. ВКЛАДКИ НАВИГАЦИИ И ФОРМЫ
-   ========================================== */
 .tab-bar {
     display: flex;
     background: var(--tab-bg);
@@ -138,7 +104,6 @@ body {
     border-radius: 12px;
     margin-bottom: 25px;
 }
-
 .tab-btn {
     flex: 1;
     background: none;
@@ -150,13 +115,11 @@ body {
     font-weight: 500;
     cursor: pointer;
 }
-
 .tab-btn.active {
     background: var(--card-bg);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     font-weight: 600;
 }
-
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
@@ -166,43 +129,31 @@ body {
     border-radius: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
-
 .app-section h2 { font-size: 18px; margin-top: 0; margin-bottom: 20px; }
-.app-section h3 { font-size: 14px; color: var(--text-muted); margin-top: 25px; margin-bottom: 12px; }
-
 .field-label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
 .form-group input, .form-group select {
     width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid var(--border-color);
     border-radius: 10px; background-color: var(--bg-color); color: var(--text-main); box-sizing: border-box; outline: none;
 }
-input[type="date"] { max-width: 100% !important; width: 100% !important; appearance: none; -webkit-appearance: none; min-height: 47px; }
-.form-group input:focus, .form-group select:focus { border-color: var(--accent); }
-
 button { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
-/* ==========================================
-   4. СПИСКИ ЭЛЕМЕНТОВ И ЦЕЛИ
-   ========================================== */
-   .list-container { max-height: 350px; overflow-y: auto; }
-   .list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 15px; }
-   .category-tag { font-size: 11px; background: var(--tab-bg); color: var(--text-main); padding: 3px 8px; border-radius: 6px; margin-right: 8px; font-weight: 500; }
-   .delete-btn { background: none; color: var(--text-muted); padding: 4px; width: auto; font-size: 14px; margin-left: 10px; }
-   .delete-btn:hover { color: var(--red); background: none; }
-   
-   .goal-container { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
-   .goal-info { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
-   .progress-bar { background: var(--tab-bg); border-radius: 6px; height: 8px; width: 100%; overflow: hidden; }
-   .progress-fill { background: var(--green); height: 100%; border-radius: 6px; }
-   
-/* ==========================================
-   5. ИДЕАЛЬНЫЙ АДАПТИВНЫЙ ТЁМНЫЙ КАЛЕНДАРЬ
-   ========================================== */
-   .calendar-grid {
+
+.list-container { max-height: 350px; overflow-y: auto; }
+.list-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 15px; }
+.category-tag { font-size: 11px; background: var(--tab-bg); color: var(--text-main); padding: 3px 8px; border-radius: 6px; margin-right: 8px; font-weight: 500; }
+.delete-btn { background: none; color: var(--text-muted); padding: 4px; width: auto; font-size: 14px; margin-left: 10px; border:none; cursor:pointer;}
+.delete-btn:hover { color: var(--red); background: none; }
+
+.goal-container { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+.goal-info { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+.progress-bar { background: var(--tab-bg); border-radius: 6px; height: 8px; width: 100%; overflow: hidden; }
+.progress-fill { background: var(--green); height: 100%; border-radius: 6px; }
+
+.calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px; /* Компактные отступы между днями */
+    gap: 4px;
     margin-top: 10px;
 }
-
 .calendar-weekday {
     text-align: center;
     font-weight: 600;
@@ -210,9 +161,8 @@ button { width: 100%; padding: 14px; background: var(--accent); color: #fff; bor
     color: var(--text-muted);
     padding: 3px 0;
 }
-
 .calendar-day {
-    background: #2c2c2e; /* Фиксированный темный фон ячеек */
+    background: #2c2c2e;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     min-height: 75px;
@@ -222,149 +172,76 @@ button { width: 100%; padding: 14px; background: var(--accent); color: #fff; bor
     justify-content: space-between;
     box-sizing: border-box;
 }
-
 .calendar-day-number {
     font-size: 11px;
     font-weight: 700;
     color: var(--text-main);
     margin-bottom: 2px;
 }
-
 .calendar-events-container {
     display: flex;
     flex-direction: column;
     gap: 3px;
     overflow: hidden;
 }
-
-/* 🌟 ВОЗВРАЩАЕМ ЯРКУЮ ПОДСВЕТКУ ЦВЕТОМ И ВКЛЮЧАЕМ ПЕРЕНОС СТРОК */
 .cal-event-badge {
     font-size: 9px;
     font-weight: 600;
     padding: 2px 4px;
     border-radius: 4px;
-    color: #ffffff !important; /* Белый читаемый текст поверх заливки */
-    white-space: normal;       /* РАЗРЕШАЕМ ПЕРЕНОС ДЛИННОГО ТЕКСТА НА СЛЕДУЮЩУЮ СТРОКУ */
-    word-break: break-word;    /* Защита от вылета текста */
+    color: #ffffff !important;
+    white-space: normal;
+    word-break: break-word;
     line-height: 1.1;
     display: block;
+    cursor: pointer;
 }
+.cal-event-badge.income { background-color: #34c759 !important; }
+.cal-event-badge.expense { background-color: #ff3b30 !important; }
+.cal-event-badge.debt { background-color: #0a84ff !important; }
+.cal-event-badge.recurring { background-color: #5856d6 !important; }
 
-/* Полная заливка плашек сочными цветами Apple */
-.cal-event-badge.income { background-color: #34c759 !important; }    /* Зеленый доход */
-.cal-event-badge.expense { background-color: #ff3b30 !important; }   /* Красный расход */
-.cal-event-badge.debt { background-color: #0a84ff !important; }      /* Синий долг */
-.cal-event-badge.recurring { background-color: #5856d6 !important; } /* Фиолетовая подписка */
-
-.calendar-day.empty {
-    background: transparent;
-    border: none;
-}
-
-/* 🔴 ПОДСВЕТКА СЕГОДНЯШНЕГО ДНЯ */
+.calendar-day.empty { background: transparent; border: none; }
 .calendar-day.today-highlight {
-    border: 2px solid #ff3b30 !important; /* Яркая красная рамка вокруг ячейки */
+    border: 2px solid #ff3b30 !important;
     box-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
     background: rgba(255, 59, 48, 0.05) !important;
 }
 
-/* Стили для кнопки "пропустить" внутри календаря */
-.cal-event-badge button {
-    width: auto;
-    padding: 0 2px;
-    font-size: 7px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 2px;
-    border: none;
-    color: #fff;
-    float: right;
-    margin-top: 1px;
-    cursor: pointer;
-}
-
-   
-   /* ==========================================
-      6. АДАПТИВНОСТЬ ПОД ЭКРАН IPHONE (ТРИ ПЛАШКИ)
-      ========================================== */
-   @media (max-width: 600px) {
-       body { padding: 15px 10px; }
-       .main-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-       .main-header div { width: 100%; }
-       .header-right-side { text-align: left !important; align-items: flex-start !important; width: 100%; }
-       
-       /* Перестраиваем 3 карточки на iPhone в компактную сетку */
-       .balance-cards-group { width: 100%; gap: 8px; display: grid; grid-template-columns: repeat(3, 1fr); }
-       .balance-card { padding: 8px 6px; text-align: center; }
-       .balance-label { font-size: 8px; letter-spacing: -0.2px; }
-       .balance-value, #total-income, #total-balance, #total-undated-debts { font-size: 13px; }
-       
-       .tab-bar { border-radius: 8px; margin-bottom: 15px; }
-       .tab-btn { font-size: 12px; padding: 10px 4px; }
-       .app-section { padding: 15px; border-radius: 14px; }
-       .calendar-day { min-height: 55px; padding: 3px; border-radius: 5px; }
-       .calendar-day-number { font-size: 10px; }
-       .cal-event-badge { font-size: 7px; padding: 1px 2px; border-radius: 2px; }
-   }
-   
-   /* ==========================================
-      7. ИДЕАЛЬНЫЕ ТЁМНЫЕ МОДАЛЬНЫЕ ОКНА ДЛЯ IPHONE
-      ========================================== */
-   .modal-backdrop {
-       display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-       background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-       justify-content: center; align-items: center; z-index: 99999; box-sizing: border-box;
-   }
-   .modal-backdrop.open { display: flex; }
-   .modal-window {
-       background: #2c2c2e; border: 1px solid #48484a; padding: 24px; border-radius: 18px;
-       width: 88%; max-width: 340px; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7); box-sizing: border-box;
-       animation: modalFadeIn 0.2s ease-out;
-   }
-   @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-   .modal-window h3 { margin-top: 0; font-size: 19px; font-weight: 600; margin-bottom: 15px; color: #ffffff; text-align: center; }
-   .modal-label { display: block; font-size: 11px; color: #aeaea2; font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 12px; margin-bottom: 5px; text-align: left; }
-   .modal-window input {
-       width: 100%; padding: 12px 14px; border: 1px solid #48484a; border-radius: 10px;
-       background: #1c1c1e; color: #ffffff !important; box-sizing: border-box; font-size: 16px; outline: none;
-   }
-   .modal-window input:focus { border-color: #0a84ff; }
-   .modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
-   .modal-buttons button { flex: 1; padding: 12px; font-size: 15px; font-weight: 600; border-radius: 10px; }
-   .cancel-btn { background: #48484a !important; color: #ffffff !important; }
-   
-   /* Особый стиль списков детализации внутри статистики */
-   .stat-modal-item {
-       display: flex; justify-content: space-between; padding: 10px 0;
-       border-bottom: 1px solid #48484a; font-size: 14px; color: #f5f5f7;
-   }
-/* ==========================================
-   11. ПОДСВЕТКА ТЕКУЩЕГО ДНЯ В КАЛЕНДАРЕ
-   ========================================== */
-/* На ПК версии обводим всю ячейку красивой красной неоновой рамкой */
-.calendar-day.today-highlight {
-    border: 2px solid var(--red) !important;
-    box-shadow: 0 0 10px rgba(255, 59, 48, 0.3);
-    background: rgba(255, 59, 48, 0.03) !important;
-}
-
-/* На iPhone версии делаем красивую нативную красную точку-индикатор рядом с датой */
 @media (max-width: 600px) {
-    .calendar-day.today-highlight .calendar-day-number {
-        color: var(--red) !important; /* Делаем текст даты красным */
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    /* Добавляем аккуратный красный пульсирующий кружок перед датой */
-    .calendar-day.today-highlight .calendar-day-number::before {
-        content: "";
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        background-color: var(--red);
-        border-radius: 50%;
-        box-shadow: 0 0 6px var(--red);
-    }
+    body { padding: 15px 10px; }
+    .main-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+    .main-header div { width: 100%; }
+    .header-right-side { text-align: left !important; align-items: flex-start !important; width: 100%; }
+    .balance-cards-group { width: 100%; gap: 8px; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .balance-card { padding: 8px 6px; text-align: center; }
+    .balance-label { font-size: 8px; letter-spacing: -0.2px; }
+    .balance-value { font-size: 13px; }
+    .tab-bar { border-radius: 8px; margin-bottom: 15px; }
+    .tab-btn { font-size: 12px; padding: 10px 4px; }
+    .app-section { padding: 15px; border-radius: 14px; }
+    .calendar-day { min-height: 55px; padding: 3px; border-radius: 5px; }
+    .calendar-day-number { font-size: 10px; }
+    .cal-event-badge { font-size: 7px; padding: 1px 2px; border-radius: 2px; }
 }
-   
+
+.modal-backdrop {
+    display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    justify-content: center; align-items: center; z-index: 99999;
+}
+.modal-backdrop.open { display: flex; }
+.modal-window {
+    background: #2c2c2e; border: 1px solid #48484a; padding: 24px; border-radius: 18px;
+    width: 88%; max-width: 340px; box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7); box-sizing: border-box;
+}
+.modal-window h3 { margin-top: 0; font-size: 19px; font-weight: 600; margin-bottom: 15px; color: #ffffff; text-align: center; }
+.modal-label { display: block; font-size: 11px; color: #aeaea2; font-weight: 500; text-transform: uppercase; margin-top: 12px; margin-bottom: 5px; }
+.modal-window input {
+    width: 100%; padding: 12px 14px; border: 1px solid #48484a; border-radius: 10px;
+    background: #1c1c1e; color: #ffffff !important; font-size: 16px; outline: none;
+}
+.modal-buttons { display: flex; gap: 12px; margin-top: 24px; }
+.modal-buttons button { flex: 1; padding: 12px; font-size: 15px; font-weight: 600; border-radius: 10px; }
+.cancel-btn { background: #48484a !important; color: #ffffff !important; }
+.stat-modal-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #48484a; font-size: 14px; }
