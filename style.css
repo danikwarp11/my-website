@@ -366,5 +366,63 @@ button { width: 100%; padding: 14px; background: var(--accent); color: #fff; bor
         border-radius: 50%;
         box-shadow: 0 0 6px var(--red);
     }
+    /* ? СТИЛИ ДЛЯ ВТОРОГО ПОЛНОЭКРАННОГО ОКНА */
+
+.full-screen-window {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-color); /* Используем глобальный темный фон приложения */
+    z-index: 9999;                     /* Перекрывает абсолютно все элементы на экране */
+    box-sizing: border-box;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;                  /* Включает независимую прокрутку только внутри этого окна */
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* ? Нативная плашка шапки для второго окна */
+.second-window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 750px;
+    width: 100%;
+    margin: 0 auto 25px auto;
+}
+
+.second-window-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ? Ограничиваем контент по ширине для сохранения общей симметрии на Mac */
+.second-window-content {
+    max-width: 750px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* ? Кнопка Назад в стиле iOS */
+.back-btn {
+    width: auto;
+    padding: 8px 16px;
+    background: var(--tab-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 10px;
+}
+
+/* ! КРИТИЧЕСКИЕ КЛАССЫ СОСТОЯНИЯ: Скрытие и анимация */
+.full-screen-window.hidden {
+    opacity: 0;
+    pointer-events: none;              /* Блокирует клики сквозь невидимое окно */
+    transform: translateY(20px);       /* Эффект легкого вылета снизу при открытии */
+}
+
 }
    

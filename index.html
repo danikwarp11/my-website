@@ -266,6 +266,33 @@
                     <button onclick="closeCalPayModal()" class="cancel-btn">Отмена</button>
                 </div>
             </div>
+            <!-- ? ВТОРОЕ ПОЛНОЭКРАННОЕ ОКНО: АНАЛИТИКА И РАСШИРЕННЫЕ ОТЧЕТЫ -->
+<!-- ! КРИТИЧЕСКОЕ УСЛОВИЕ: Окно изначально имеет класс 'hidden' и скрыто от пользователя -->
+<div id="second-window-screen" class="full-screen-window hidden">
+    
+    <!-- ? Шапка второго окна с кнопкой быстрого возврата назад -->
+    <div class="second-window-header">
+        <h2>📊 Расширенная Аналитика</h2>
+        <button class="back-btn" onclick="closeSecondWindow()">&larr; Назад</button>
+    </div>
+
+    <!-- ? Основной контентный блок второго окна -->
+    <div class="second-window-content">
+        <div class="app-section">
+            <h3>📈 Статистика по категориям</h3>
+            <p style="color: var(--text-muted);">Здесь будет выводиться круговая диаграмма распределения ваших расходов.</p>
+            <!-- TODO: Интегрировать сюда библиотеку Chart.js для отрисовки графиков на следующем шаге -->
+        </div>
+
+        <div class="app-section" style="margin-top: 20px;">
+            <h3>💡 Финансовый советник</h3>
+            <p id="finance-advice-text" style="color: var(--green);">Анализирую ваши данные... Баланс под контролем!</p>
+        </div>
+    </div>
+</div>
+<!-- ? Кнопка открытия второго окна -->
+<button type="button" onclick="openSecondWindow()" style="width: auto; padding: 10px 14px; font-size: 13px;">Открыть отчеты</button>
+
         </div>
     
 </body>

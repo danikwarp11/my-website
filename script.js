@@ -658,6 +658,43 @@ function resolveDebtFromCalendar(isSettled) {
         }
     }
     closeCalDebtModal();
+    // ? Функция для открытия второго полноэкранного окна
+function openSecondWindow() {
+    const secondWindow = document.getElementById('second-window-screen');
+    
+    // ? Удаляем класс скрытия, чтобы запустить CSS-анимацию плавного появления
+    secondWindow.classList.remove('hidden');
+    
+    // TODO: Здесь можно вызвать расчеты или функции генерации отчетов перед показом
+    generateFinanceAdvice(); 
+}
+
+// ? Функция для закрытия второго окна и возвращения к главному экрану
+function closeSecondWindow() {
+    const secondWindow = document.getElementById('second-window-screen');
+    
+    // ? Добавляем класс hidden обратно, окно плавно исчезает
+    secondWindow.classList.add('hidden');
+}
+
+// ? Пример внутренней динамической логики для второго окна
+function generateFinanceAdvice() {
+    const adviceEl = document.getElementById('finance-advice-text');
+    if (!adviceEl) return;
+    
+    // ! ЛОГИКА ПРОВЕРКИ: Считываем текущее состояние баланса из функции render()
+    const balanceText = document.getElementById('total-balance')?.innerText || "0";
+    const currentBalance = parseFloat(balanceText.replace(/[^0-9.-]/g, '')) || 0;
+    
+    if (currentBalance < 0) {
+        adviceEl.innerText = "⚠️ Внимание! Расходы превысили доходы в этом месяце. Сократите необязательные траты.";
+        adviceEl.style.color = "var(--red)";
+    } else {
+        adviceEl.innerText = "💸 Отличная работа! Баланс положительный, вы укладываетесь в бюджет.";
+        adviceEl.style.color = "var(--green)";
+    }
+}
+
 }
  
 // Стартовый нативный вызов пересчета при первой загрузке приложения
