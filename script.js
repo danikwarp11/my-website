@@ -36,13 +36,44 @@ function saveData() {
     }
 }
 
-function changeViewMonth() {
-    localStorage.setItem('selectedFinanceMonth', viewMonthSelect.value);
-    render();
-    if (document.getElementById('calendar-screen').classList.contains('active')) {
-        initCalendar();
+// ? Функция перелистывания месяцев стрелками (-1 — назад, 1 — вперед)
+function stepMonth(direction) {
+    const viewMonthSelect = document.getElementById('view-month');
+    const viewYearSelect = document.getElementById('view-year');
+    
+    let currentMonth = parseInt(viewMonthSelect.value);
+    let currentYear = parseInt(viewYearSelect.value);
+    
+    // ? Вычисляем новый индекс месяца
+    currentMonth += direction;
+    
+    // ! КРИТИЧЕСКОЕ УСЛОВИЕ: Переход через границу Нового Года назад (из Января в Декабрь)
+    if (currentMonth < 0) {
+        currentMonth = 11; // Переходим на Декабрь
+        currentYear -= 1;  // Уменьшаем год на один
+    } 
+    // ! КРИТИЧЕСКОЕ УСЛОВИЕ: Переход через границу Нового Года вперед (из Декабря в Январь)
+    else if (currentMonth > 11) {
+        currentMonth = 0;  // Переходим на Январь
+        currentYear += 1;  // Увеличиваем год на один
+    }
+    
+    // ? Проверяем, существует ли вычисленный год в нашем выпадающем списке
+    const yearOption = viewYearSelect.querySelector(`option[value="${currentYear}"]`);
+    
+    if (yearOption) {
+        // ? Если год доступен, обновляем значения в интерфейсе селекторов
+        viewMonthSelect.value = currentMonth.toString();
+        viewYearSelect.value = currentYear.toString();
+        
+        // ? Вызываем штатную функцию сохранения выбранного месяца и перерисовки интерфейса
+        changeViewMonth();
+    } else {
+        // ! ПРЕДУПРЕЖДЕНИЕ: Предотвращаем баг выхода за пределы доступных в HTML годов (2026-2028)
+        alert('Достигнут предел доступного календаря!');
     }
 }
+
 
 function switchTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
